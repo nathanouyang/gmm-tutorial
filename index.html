@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaussian Mixture Models Tutorial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">GMM Tutorial</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Model-based Clustering: Gaussian Mixture Models</h1>
+        
+        <section id="introduction" class="my-5">
+            <h2>📌 Introduction</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>What is clustering?</h3>
+                    <p>Clustering is an unsupervised learning technique that groups similar data points together based on certain features or characteristics. The goal is to find natural groupings in data without prior labels.</p>
+                    
+                    <h3>Limitations of hard clustering like K-Means</h3>
+                    <p>Traditional clustering algorithms like K-Means assign each data point to exactly one cluster (hard clustering). This has several limitations:</p>
+                    <ul>
+                        <li>Assumes spherical clusters of similar sizes</li>
+                        <li>Cannot express uncertainty in cluster assignments</li>
+                        <li>Performs poorly with overlapping clusters</li>
+                        <li>Sensitive to initialization and outliers</li>
+                    </ul>
+                    
+                    <h3>Why GMM?</h3>
+                    <p>Gaussian Mixture Models (GMMs) offer several advantages:</p>
+                    <ul>
+                        <li><strong>Soft clustering</strong>: Assigns probabilities of belonging to each cluster</li>
+                        <li><strong>Flexible cluster shapes</strong>: Models elliptical clusters with different orientations and sizes</li>
+                        <li><strong>Probabilistic framework</strong>: Provides uncertainty measures in clustering</li>
+                        <li><strong>Principled approach</strong>: Based on a statistical model with clear assumptions</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Key Concept</h5>
+                            <p>A Gaussian Mixture Model represents a distribution as a weighted sum of Gaussian distributions.</p>
+                            <div id="gmm-intro-formula" class="formula-display"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="dataset-preparation" class="my-5">
+            <h2>📊 Dataset Preparation</h2>
+            <p>Let's explore GMMs using both synthetic data and real-world examples.</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Synthetic Dataset</h3>
+                    <p>We'll generate a dataset with overlapping clusters to demonstrate the power of GMM.</p>
+                    <div id="synthetic-data-plot" class="plot-container"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3>Code Example: Generating Synthetic Data</h3>
+                    <pre class="code-block"><code class="python">
+import numpy as np
+from sklearn.datasets import make_blobs
+
+# Generate synthetic data with 3 clusters
+X, y_true = make_blobs(
+    n_samples=300, 
+    centers=3, 
+    cluster_std=[1.0, 2.0, 0.5], 
+    random_state=42
+)
+
+# Transform the data to make it more elliptical
+transformation = np.array([[0.6, -0.6], [0.4, 0.8]])
+X = np.dot(X, transformation)
+                    </code></pre>
+                </div>
+            </div>
+        </section>
+        
+        <section id="gaussians-refresher" class="my-5">
+            <h2>📘 A Quick Refresher on Gaussians</h2>
+            <div class="row">
+                <div class="col-md-7">
+                    <h3>The Multivariate Gaussian Distribution</h3>
+                    <p>The multivariate Gaussian (or normal) distribution is a generalization of the one-dimensional normal distribution to higher dimensions. It is defined by:</p>
+                    <ul>
+                        <li><strong>Mean vector (μ)</strong>: The center of the distribution</li>
+                        <li><strong>Covariance matrix (Σ)</strong>: Describes the shape, size, and orientation of the distribution</li>
+                    </ul>
+                    <p>The probability density function (PDF) of a d-dimensional multivariate Gaussian is:</p>
+                    <div id="gaussian-pdf-formula" class="formula-display my-3"></div>
+                    <p>where:</p>
+                    <ul>
+                        <li>x is a d-dimensional vector</li>
+                        <li>μ is the mean vector</li>
+                        <li>Σ is the covariance matrix</li>
+                        <li>|Σ| is the determinant of Σ</li>
+                    </ul>
+                </div>
+                <div class="col-md-5">
+                    <div id="gaussian-2d-plot" class="plot-container"></div>
+                    <p class="text-center">2D Gaussian distribution contour plot</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="kmeans-to-gmm" class="my-5">
+            <h2>🔍 From K-Means to GMM</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>K-Means vs GMM Comparison</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>K-Means</th>
+                                <th>GMM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Assignment</td>
+                                <td>Hard (binary)</td>
+                                <td>Soft (probabilistic)</td>
+                            </tr>
+                            <tr>
+                                <td>Cluster shape</td>
+                                <td>Spherical</td>
+                                <td>Elliptical</td>
+                            </tr>
+                            <tr>
+                                <td>Distance measure</td>
+                                <td>Euclidean</td>
+                                <td>Mahalanobis</td>
+                            </tr>
+                            <tr>
+                                <td>Model complexity</td>
+                                <td>Low</td>
+                                <td>Higher</td>
+                            </tr>
+                            <tr>
+                                <td>Training method</td>
+                                <td>Iterative optimization</td>
+                                <td>Expectation-Maximization (EM)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h3>Visual Comparison</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div id="kmeans-plot" class="plot-container"></div>
+                            <p class="text-center">K-Means clustering result</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="gmm-plot" class="plot-container"></div>
+                            <p class="text-center">GMM clustering result</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="gmm-sklearn" class="my-5">
+            <h2>📈 GMM with Scikit-Learn</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Implementing GMM</h3>
+                    <p>Scikit-learn provides a simple API for fitting Gaussian Mixture Models:</p>
+                    <pre class="code-block"><code class="python">
+from sklearn.mixture import GaussianMixture
+
+# Create and fit the GMM model
+gmm = GaussianMixture(
+    n_components=3,    # Number of clusters
+    covariance_type='full',  # Full covariance matrix
+    random_state=42
+)
+
+# Fit the model to the data
+gmm.fit(X)
+
+# Get cluster assignments
+labels = gmm.predict(X)
+
+# Get probability of belonging to each cluster
+probabilities = gmm.predict_proba(X)
+                    </code></pre>
+                </div>
+                <div class="col-md-6">
+                    <h3>Key Parameters</h3>
+                    <ul>
+                        <li><strong>n_components</strong>: Number of mixture components (clusters)</li>
+                        <li><strong>covariance_type</strong>:
+                            <ul>
+                                <li>'full': Each component has its own general covariance matrix</li>
+                                <li>'tied': All components share the same general covariance matrix</li>
+                                <li>'diag': Each component has its own diagonal covariance matrix</li>
+                                <li>'spherical': Each component has its own single variance</li>
+                            </ul>
+                        </li>
+                        <li><strong>max_iter</strong>: Maximum number of EM iterations</li>
+                        <li><strong>init_params</strong>: Method used to initialize the weights, means and precisions</li>
+                    </ul>
+                    <div id="gmm-result-plot" class="plot-container"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="soft-clustering" class="my-5">
+            <h2>🧪 Soft Clustering</h2>
+            <div class="row">
+                <div class="col-md-7">
+                    <h3>Visualizing Cluster Probabilities</h3>
+                    <p>One of the key advantages of GMM is soft assignment - each point has a probability of belonging to each cluster.</p>
+                    <pre class="code-block"><code class="python">
+# Getting probability values
+probabilities = gmm.predict_proba(X)
+
+# Example: Visualizing point with uncertain assignment
+point_idx = 42  # Some example point
+print(f"Point {point_idx} probabilities:")
+for i, prob in enumerate(probabilities[point_idx]):
+    print(f"  Cluster {i}: {prob:.3f}")
+                    </code></pre>
+                    <p>This allows us to identify points that are on the boundaries between clusters, where the assignment is uncertain.</p>
+                </div>
+                <div class="col-md-5">
+                    <div id="soft-clustering-plot" class="plot-container"></div>
+                    <p class="text-center">Visualization of cluster probabilities (darker colors indicate higher probability)</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="hyperparameter-tuning" class="my-5">
+            <h2>🛠 Hyperparameter Tuning</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Choosing the Number of Components</h3>
+                    <p>A critical parameter in GMM is the number of components. We can use information criteria to select this:</p>
+                    <ul>
+                        <li><strong>Akaike Information Criterion (AIC)</strong>: Penalizes model complexity</li>
+                        <li><strong>Bayesian Information Criterion (BIC)</strong>: Similar to AIC but with stronger penalty for complexity</li>
+                    </ul>
+                    <div id="aic-bic-formula" class="formula-display"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3>Code Example: Model Selection</h3>
+                    <pre class="code-block"><code class="python">
+# Evaluate different numbers of components
+n_components_range = range(1, 10)
+models = [GaussianMixture(n_components=n, 
+                          covariance_type='full', 
+                          random_state=42).fit(X)
+          for n in n_components_range]
+
+aic = [model.aic(X) for model in models]
+bic = [model.bic(X) for model in models]
+
+# The best number of components is the one with lowest AIC/BIC
+best_aic = n_components_range[np.argmin(aic)]
+best_bic = n_components_range[np.argmin(bic)]
+                    </code></pre>
+                    <div id="aic-bic-plot" class="plot-container"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="summary" class="my-5">
+            <h2>📚 Summary</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>Key Takeaways</h3>
+                    <ul>
+                        <li>GMM provides a flexible clustering method that can model complex, elliptical clusters</li>
+                        <li>Soft clustering assigns probabilities rather than hard labels, capturing uncertainty</li>
+                        <li>GMM is a generative model - we can sample new data from the fitted distribution</li>
+                        <li>Use AIC/BIC to choose the appropriate number of components</li>
+                        <li>The covariance_type parameter allows trading off between model flexibility and computational complexity</li>
+                    </ul>
+                    
+                    <h3>When to Use GMM</h3>
+                    <ul>
+                        <li>When clusters have different sizes or orientations</li>
+                        <li>When cluster boundaries are fuzzy and probabilistic assignments are valuable</li>
+                        <li>When a statistical model of the data generation process is desired</li>
+                        <li>For density estimation and generative modeling</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Further Resources</h5>
+                            <ul>
+                                <li><a href="https://scikit-learn.org/stable/modules/mixture.html" target="_blank">Scikit-learn GMM Documentation</a></li>
+                                <li><a href="https://en.wikipedia.org/wiki/Mixture_model" target="_blank">Mixture Models on Wikipedia</a></li>
+                                <li><a href="https://www.jmlr.org/papers/volume6/zivkovic05a/zivkovic05a.pdf" target="_blank">Improved Algorithm for GMMs</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="bg-light py-3 mt-5">
+        <div class="container text-center">
+            <p>© 2023 GMM Tutorial | Created for educational purposes</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.2/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js@2.18.2/dist/plotly.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html> 
