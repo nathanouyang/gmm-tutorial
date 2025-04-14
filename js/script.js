@@ -123,66 +123,157 @@ function createInteractiveGMMExample() {
     // Parameters for the simulation
     let iteration = 0;
     const maxIterations = 10;
-    const logLikelihoodHistory = [];
+    let logLikelihoodHistory = [];
     
     // Initial synthetic data with 3 clusters
-    const cluster1 = generateGaussianCluster(80, [-2.5, -1], [[1.0, 0.3], [0.3, 0.8]]);
-    const cluster2 = generateGaussianCluster(100, [2, 1.5], [[1.2, -0.5], [-0.5, 1.0]]);
-    const cluster3 = generateGaussianCluster(70, [0, -2], [[0.8, 0], [0, 0.8]]);
-    
-    // Combine data
-    const allX = cluster1.x.concat(cluster2.x, cluster3.x);
-    const allY = cluster1.y.concat(cluster2.y, cluster3.y);
-    const trueLabels = Array(cluster1.x.length).fill(0)
-        .concat(Array(cluster2.x.length).fill(1))
-        .concat(Array(cluster3.x.length).fill(2));
+    let cluster1, cluster2, cluster3, allX, allY, trueLabels;
     
     // GMM parameters
-    let weights = [0.33, 0.33, 0.34]; // Initial weights
-    let means = [
-        [-1.5, -0.5],  // Initial mean for cluster 1 (intentionally offset from true means)
-        [1.5, 2],      // Initial mean for cluster 2
-        [0.5, -1.5]    // Initial mean for cluster 3
-    ];
-    let covs = [
-        [[1, 0], [0, 1]],  // Initial covariance for cluster 1
-        [[1, 0], [0, 1]],  // Initial covariance for cluster 2
-        [[1, 0], [0, 1]]   // Initial covariance for cluster 3
-    ];
+    let weights, means, covs, responsibilities, logLikelihood;
     
-    // Calculate initial responsibilities and log-likelihood
-    let responsibilities = calculateResponsibilities(allX, allY, weights, means, covs);
-    let logLikelihood = calculateLogLikelihood(allX, allY, weights, means, covs);
-    logLikelihoodHistory.push(logLikelihood);
-    
-    // Set up DOM element content
-    updateParameterDisplay(iteration, logLikelihood, weights, means);
-    
-    try {
-        // Initial data plot
-        console.log("Creating data plot");
-        createDataPlot(dataPlotElement, allX, allY, trueLabels);
+    // Function to generate random cluster parameters
+    function generateRandomClusterParams() {
+        // Generate random means within a reasonable range
+        const randomMean1 = [Math.random() * 4 - 2, Math.random() * 4 - 2];
+        const randomMean2 = [Math.random() * 4 - 2, Math.random() * 4 - 2];
+        const randomMean3 = [Math.random() * 4 - 2, Math.random() * 4 - 2];
         
-        // Initial EM plot
-        console.log("Creating EM plot");
-        updateEMPlot(emPlotElement, allX, allY, responsibilities, means, covs);
+        // Generate random covariance matrices (ensuring they're positive definite)
+        const randomCov1 = generateRandomCovMatrix();
+        const randomCov2 = generateRandomCovMatrix();
+        const randomCov3 = generateRandomCovMatrix();
         
-        // Initial responsibilities plot
-        console.log("Creating responsibilities plot");
-        updateResponsibilitiesPlot(responsibilitiesPlotElement, responsibilities);
+        // Generate random cluster sizes
+        const n1 = Math.floor(Math.random() * 50) + 50; // Between 50-100
+        const n2 = Math.floor(Math.random() * 50) + 50;
+        const n3 = Math.floor(Math.random() * 50) + 50;
         
-        // Initial convergence plot
-        console.log("Creating convergence plot");
-        updateConvergencePlot(convergencePlotElement, logLikelihoodHistory);
-    } catch (error) {
-        console.error("Error creating plots:", error);
+        return {
+            cluster1Params: {
+                n: n1,
+                mean: randomMean1,
+                cov: randomCov1
+            },
+            cluster2Params: {
+                n: n2,
+                mean: randomMean2,
+                cov: randomCov2
+            },
+            cluster3Params: {
+                n: n3,
+                mean: randomMean3,
+                cov: randomCov3
+            }
+        };
     }
+    
+    // Function to generate a random positive definite covariance matrix
+    function generateRandomCovMatrix() {
+        // Generate random values for variance and covariance
+        const var1 = Math.random() * 1.5 + 0.5; // Between 0.5 and 2.0
+        const var2 = Math.random() * 1.5 + 0.5;
+        
+        // Covariance must satisfy: |cov| < sqrt(var1 * var2)
+        const maxCov = Math.sqrt(var1 * var2) * 0.9; // Stay within limits for positive definiteness
+        const cov = (Math.random() * 2 - 1) * maxCov;
+        
+        return [[var1, cov], [cov, var2]];
+    }
+    
+    // Function to generate the initial means for GMM (offset from true means)
+    function generateInitialMeans(trueCluster1, trueCluster2, trueCluster3) {
+        // Apply a small random offset to the true means
+        return [
+            [trueCluster1.mean[0] + (Math.random() - 0.5), trueCluster1.mean[1] + (Math.random() - 0.5)],
+            [trueCluster2.mean[0] + (Math.random() - 0.5), trueCluster2.mean[1] + (Math.random() - 0.5)],
+            [trueCluster3.mean[0] + (Math.random() - 0.5), trueCluster3.mean[1] + (Math.random() - 0.5)]
+        ];
+    }
+    
+    // Function to initialize synthetic data and GMM
+    function initializeData() {
+        // Reset iteration counter and history
+        iteration = 0;
+        logLikelihoodHistory = [];
+        
+        // Generate random cluster parameters
+        const randomParams = generateRandomClusterParams();
+        
+        // Generate synthetic data for each cluster
+        cluster1 = generateGaussianCluster(
+            randomParams.cluster1Params.n, 
+            randomParams.cluster1Params.mean, 
+            randomParams.cluster1Params.cov
+        );
+        
+        cluster2 = generateGaussianCluster(
+            randomParams.cluster2Params.n, 
+            randomParams.cluster2Params.mean, 
+            randomParams.cluster2Params.cov
+        );
+        
+        cluster3 = generateGaussianCluster(
+            randomParams.cluster3Params.n, 
+            randomParams.cluster3Params.mean, 
+            randomParams.cluster3Params.cov
+        );
+        
+        // Combine data
+        allX = cluster1.x.concat(cluster2.x, cluster3.x);
+        allY = cluster1.y.concat(cluster2.y, cluster3.y);
+        trueLabels = Array(cluster1.x.length).fill(0)
+            .concat(Array(cluster2.x.length).fill(1))
+            .concat(Array(cluster3.x.length).fill(2));
+        
+        // Initialize GMM parameters
+        weights = [0.33, 0.33, 0.34]; // Initial weights
+        
+        // Initialize means (with a slight offset from true means)
+        means = generateInitialMeans(
+            randomParams.cluster1Params,
+            randomParams.cluster2Params,
+            randomParams.cluster3Params
+        );
+        
+        // Initialize covariances as identity matrices
+        covs = [
+            [[1, 0], [0, 1]],
+            [[1, 0], [0, 1]],
+            [[1, 0], [0, 1]]
+        ];
+        
+        // Calculate initial responsibilities and log-likelihood
+        responsibilities = calculateResponsibilities(allX, allY, weights, means, covs);
+        logLikelihood = calculateLogLikelihood(allX, allY, weights, means, covs);
+        logLikelihoodHistory.push(logLikelihood);
+        
+        // Update parameter display
+        updateParameterDisplay(iteration, logLikelihood, weights, means);
+        
+        // Create/update plots
+        createDataPlot(dataPlotElement, allX, allY, trueLabels);
+        updateEMPlot(emPlotElement, allX, allY, responsibilities, means, covs);
+        updateResponsibilitiesPlot(responsibilitiesPlotElement, responsibilities);
+        updateConvergencePlot(convergencePlotElement, logLikelihoodHistory);
+        
+        // Re-enable iterate button if it was disabled
+        const iterateButton = document.getElementById('em-iterate-btn');
+        if (iterateButton) {
+            iterateButton.disabled = false;
+        }
+        
+        console.log("New synthetic data generated");
+    }
+    
+    // Initialize data for the first time
+    initializeData();
     
     // Set up buttons
     const iterateButton = document.getElementById('em-iterate-btn');
     const resetButton = document.getElementById('em-reset-btn');
+    const newDataButton = document.getElementById('new-data-btn');
     
-    console.log("Buttons:", { iterateButton, resetButton });
+    console.log("Buttons:", { iterateButton, resetButton, newDataButton });
     
     if (iterateButton && resetButton) {
         iterateButton.addEventListener('click', () => {
@@ -215,14 +306,17 @@ function createInteractiveGMMExample() {
         
         resetButton.addEventListener('click', () => {
             console.log("Reset button clicked");
-            // Reset all parameters
+            // Reset with same data but initial parameters
             iteration = 0;
             weights = [0.33, 0.33, 0.34];
-            means = [
-                [-1.5, -0.5],
-                [1.5, 2],
-                [0.5, -1.5]
-            ];
+            means = generateInitialMeans(
+                { mean: [cluster1.x.reduce((a, b) => a + b, 0) / cluster1.x.length, 
+                         cluster1.y.reduce((a, b) => a + b, 0) / cluster1.y.length] },
+                { mean: [cluster2.x.reduce((a, b) => a + b, 0) / cluster2.x.length,
+                         cluster2.y.reduce((a, b) => a + b, 0) / cluster2.y.length] },
+                { mean: [cluster3.x.reduce((a, b) => a + b, 0) / cluster3.x.length,
+                         cluster3.y.reduce((a, b) => a + b, 0) / cluster3.y.length] }
+            );
             covs = [
                 [[1, 0], [0, 1]],
                 [[1, 0], [0, 1]],
@@ -230,9 +324,9 @@ function createInteractiveGMMExample() {
             ];
             
             // Reset data
+            logLikelihoodHistory = [];
             responsibilities = calculateResponsibilities(allX, allY, weights, means, covs);
             logLikelihood = calculateLogLikelihood(allX, allY, weights, means, covs);
-            logLikelihoodHistory.length = 0;
             logLikelihoodHistory.push(logLikelihood);
             
             // Update displays
@@ -244,6 +338,29 @@ function createInteractiveGMMExample() {
             // Re-enable iterate button
             iterateButton.disabled = false;
         });
+    }
+    
+    // Add new data button if it exists
+    if (newDataButton) {
+        newDataButton.addEventListener('click', () => {
+            console.log("New data button clicked");
+            initializeData();
+        });
+    } else {
+        // Create new data button if it doesn't exist
+        const newDataButton = document.createElement('button');
+        newDataButton.id = 'new-data-btn';
+        newDataButton.className = 'btn btn-success mx-2';
+        newDataButton.textContent = 'New Data';
+        newDataButton.addEventListener('click', () => {
+            console.log("New data button clicked");
+            initializeData();
+        });
+        
+        // Insert next to the reset button
+        if (resetButton && resetButton.parentNode) {
+            resetButton.parentNode.appendChild(newDataButton);
+        }
     }
 }
 
