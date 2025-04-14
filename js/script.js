@@ -50,10 +50,120 @@ function createSyntheticDataPlot() {
     const plotElement = document.getElementById('synthetic-data-plot');
     if (!plotElement) return;
     
-    // Generate synthetic data (simplified for visualization)
-    const cluster1 = generateGaussianCluster(100, [-3, -2], [[1.5, 0.5], [0.5, 1.0]]);
-    const cluster2 = generateGaussianCluster(150, [2, 2], [[1.0, -0.7], [-0.7, 2.0]]);
-    const cluster3 = generateGaussianCluster(80, [0, -3], [[0.5, 0], [0, 0.5]]);
+    // Initial parameters
+    let cluster1Params = {
+        n: 100,
+        mean: [-3, -2],
+        cov: [[1.5, 0.5], [0.5, 1.0]]
+    };
+    
+    let cluster2Params = {
+        n: 150,
+        mean: [2, 2],
+        cov: [[1.0, -0.7], [-0.7, 2.0]]
+    };
+    
+    let cluster3Params = {
+        n: 80,
+        mean: [0, -3],
+        cov: [[0.5, 0], [0, 0.5]]
+    };
+    
+    // Generate initial data
+    updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    
+    // Create sliders div
+    const slidersDiv = document.createElement('div');
+    slidersDiv.className = 'sliders-container mt-3';
+    plotElement.parentNode.insertBefore(slidersDiv, plotElement.nextSibling);
+    
+    // Create cluster size sliders
+    createSlider(slidersDiv, 'Cluster 1 Size', 20, 200, cluster1Params.n, 10, value => {
+        cluster1Params.n = parseInt(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    createSlider(slidersDiv, 'Cluster 2 Size', 20, 200, cluster2Params.n, 10, value => {
+        cluster2Params.n = parseInt(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    createSlider(slidersDiv, 'Cluster 3 Size', 20, 200, cluster3Params.n, 10, value => {
+        cluster3Params.n = parseInt(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    // Create cluster position sliders
+    const positionDiv = document.createElement('div');
+    positionDiv.className = 'row mt-3';
+    slidersDiv.appendChild(positionDiv);
+    
+    const cluster1Div = document.createElement('div');
+    cluster1Div.className = 'col-md-4';
+    cluster1Div.innerHTML = '<h6>Cluster 1 Position</h6>';
+    positionDiv.appendChild(cluster1Div);
+    
+    createSlider(cluster1Div, 'X', -5, 5, cluster1Params.mean[0], 0.5, value => {
+        cluster1Params.mean[0] = parseFloat(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    createSlider(cluster1Div, 'Y', -5, 5, cluster1Params.mean[1], 0.5, value => {
+        cluster1Params.mean[1] = parseFloat(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    const cluster2Div = document.createElement('div');
+    cluster2Div.className = 'col-md-4';
+    cluster2Div.innerHTML = '<h6>Cluster 2 Position</h6>';
+    positionDiv.appendChild(cluster2Div);
+    
+    createSlider(cluster2Div, 'X', -5, 5, cluster2Params.mean[0], 0.5, value => {
+        cluster2Params.mean[0] = parseFloat(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    createSlider(cluster2Div, 'Y', -5, 5, cluster2Params.mean[1], 0.5, value => {
+        cluster2Params.mean[1] = parseFloat(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    const cluster3Div = document.createElement('div');
+    cluster3Div.className = 'col-md-4';
+    cluster3Div.innerHTML = '<h6>Cluster 3 Position</h6>';
+    positionDiv.appendChild(cluster3Div);
+    
+    createSlider(cluster3Div, 'X', -5, 5, cluster3Params.mean[0], 0.5, value => {
+        cluster3Params.mean[0] = parseFloat(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+    
+    createSlider(cluster3Div, 'Y', -5, 5, cluster3Params.mean[1], 0.5, value => {
+        cluster3Params.mean[1] = parseFloat(value);
+        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
+    });
+}
+
+// Update synthetic data plot
+function updateSyntheticDataPlot(element, cluster1Params, cluster2Params, cluster3Params) {
+    // Generate synthetic data for each cluster
+    const cluster1 = generateGaussianCluster(
+        cluster1Params.n, 
+        cluster1Params.mean, 
+        cluster1Params.cov
+    );
+    
+    const cluster2 = generateGaussianCluster(
+        cluster2Params.n, 
+        cluster2Params.mean, 
+        cluster2Params.cov
+    );
+    
+    const cluster3 = generateGaussianCluster(
+        cluster3Params.n, 
+        cluster3Params.mean, 
+        cluster3Params.cov
+    );
     
     // Combine all data
     const allX = cluster1.x.concat(cluster2.x, cluster3.x);
@@ -80,14 +190,14 @@ function createSyntheticDataPlot() {
     
     const layout = {
         title: 'Synthetic Data with 3 Clusters',
-        xaxis: { title: 'Feature 1' },
-        yaxis: { title: 'Feature 2' },
+        xaxis: { title: 'Feature 1', range: [-8, 8] },
+        yaxis: { title: 'Feature 2', range: [-8, 8] },
         margin: { t: 40, r: 20, l: 40, b: 40 },
         hovermode: 'closest',
         showlegend: false
     };
     
-    Plotly.newPlot(plotElement, data, layout, {responsive: true});
+    Plotly.react(element, data, layout, {responsive: true});
 }
 
 // Create Gaussian 2D plot
@@ -95,15 +205,84 @@ function createGaussian2DPlot() {
     const plotElement = document.getElementById('gaussian-2d-plot');
     if (!plotElement) return;
     
+    // Initial parameters
+    let mu = [0, 0];
+    let sigma = [[1, 0.5], [0.5, 1]];
+    
+    // Create plot with initial values
+    updateGaussian2DPlot(plotElement, mu, sigma);
+    
+    // Create sliders div
+    const slidersDiv = document.createElement('div');
+    slidersDiv.className = 'sliders-container mt-3';
+    plotElement.parentNode.insertBefore(slidersDiv, plotElement.nextSibling);
+    
+    // Create mean sliders
+    const muXSlider = createSlider(slidersDiv, 'Mean X', -2, 2, mu[0], 0.1, value => {
+        mu[0] = parseFloat(value);
+        updateGaussian2DPlot(plotElement, mu, sigma);
+    });
+    
+    const muYSlider = createSlider(slidersDiv, 'Mean Y', -2, 2, mu[1], 0.1, value => {
+        mu[1] = parseFloat(value);
+        updateGaussian2DPlot(plotElement, mu, sigma);
+    });
+    
+    // Create covariance sliders
+    const sigmaXXSlider = createSlider(slidersDiv, 'Var X', 0.1, 3, sigma[0][0], 0.1, value => {
+        sigma[0][0] = parseFloat(value);
+        updateGaussian2DPlot(plotElement, mu, sigma);
+    });
+    
+    const sigmaYYSlider = createSlider(slidersDiv, 'Var Y', 0.1, 3, sigma[1][1], 0.1, value => {
+        sigma[1][1] = parseFloat(value);
+        updateGaussian2DPlot(plotElement, mu, sigma);
+    });
+    
+    const sigmaXYSlider = createSlider(slidersDiv, 'Cov XY', -1, 1, sigma[0][1], 0.1, value => {
+        sigma[0][1] = parseFloat(value);
+        sigma[1][0] = parseFloat(value); // Keep symmetric
+        updateGaussian2DPlot(plotElement, mu, sigma);
+    });
+}
+
+// Helper function to create a slider
+function createSlider(container, label, min, max, value, step, onChange) {
+    const sliderContainer = document.createElement('div');
+    sliderContainer.className = 'slider-item mb-2';
+    
+    const labelElement = document.createElement('label');
+    labelElement.textContent = `${label}: ${value}`;
+    labelElement.className = 'form-label';
+    
+    const sliderElement = document.createElement('input');
+    sliderElement.type = 'range';
+    sliderElement.className = 'form-range';
+    sliderElement.min = min;
+    sliderElement.max = max;
+    sliderElement.step = step;
+    sliderElement.value = value;
+    
+    sliderElement.addEventListener('input', e => {
+        labelElement.textContent = `${label}: ${e.target.value}`;
+        onChange(e.target.value);
+    });
+    
+    sliderContainer.appendChild(labelElement);
+    sliderContainer.appendChild(sliderElement);
+    container.appendChild(sliderContainer);
+    
+    return sliderElement;
+}
+
+// Update Gaussian 2D plot with new parameters
+function updateGaussian2DPlot(element, mu, sigma) {
     // Generate grid of points
     const n = 50;
-    const x = numeric.linspace(-3, 3, n);
-    const y = numeric.linspace(-3, 3, n);
+    const x = numeric.linspace(-5, 5, n);
+    const y = numeric.linspace(-5, 5, n);
     const z = [];
     
-    // Mean and covariance for the Gaussian
-    const mu = [0, 0];
-    const sigma = [[1, 0.5], [0.5, 1]];
     const sigmaDet = sigma[0][0] * sigma[1][1] - sigma[0][1] * sigma[1][0];
     const sigmaInv = [
         [sigma[1][1] / sigmaDet, -sigma[0][1] / sigmaDet],
@@ -145,52 +324,135 @@ function createGaussian2DPlot() {
     
     const layout = {
         title: '2D Gaussian Distribution',
-        xaxis: { title: 'x' },
-        yaxis: { title: 'y' },
+        xaxis: { title: 'x', range: [-5, 5] },
+        yaxis: { title: 'y', range: [-5, 5] },
         margin: { t: 40, r: 20, l: 40, b: 40 },
         showlegend: false
     };
     
-    Plotly.newPlot(plotElement, data, layout, {responsive: true});
+    Plotly.react(element, data, layout, {responsive: true});
 }
 
 // Create comparison plots (K-Means vs GMM)
 function createComparisonPlots() {
     // K-Means plot
     const kmeansPlotElement = document.getElementById('kmeans-plot');
-    if (kmeansPlotElement) {
-        createKMeansPlot(kmeansPlotElement);
-    }
-    
-    // GMM plot
     const gmmPlotElement = document.getElementById('gmm-plot');
-    if (gmmPlotElement) {
-        createGMMComparisonPlot(gmmPlotElement);
-    }
+    
+    if (!kmeansPlotElement || !gmmPlotElement) return;
+    
+    // Initial parameters for the comparison data
+    let comparisonParams = {
+        cluster1: {
+            n: 100,
+            mean: [-2, 0],
+            cov: [[0.5, 0], [0, 2.0]]
+        },
+        cluster2: {
+            n: 100, 
+            mean: [2, 0],
+            cov: [[0.5, 0], [0, 2.0]]
+        }
+    };
+    
+    // Create plots with initial parameters
+    updateComparisonPlots(kmeansPlotElement, gmmPlotElement, comparisonParams);
+    
+    // Create sliders div
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'sliders-container mt-3';
+    kmeansPlotElement.parentNode.parentNode.parentNode.insertBefore(
+        controlsDiv, 
+        kmeansPlotElement.parentNode.parentNode.nextSibling
+    );
+    
+    // Create slider for cluster separation
+    createSlider(controlsDiv, 'Cluster Separation', 2, 6, 4, 0.5, value => {
+        const separation = parseFloat(value);
+        comparisonParams.cluster1.mean = [-separation/2, 0];
+        comparisonParams.cluster2.mean = [separation/2, 0];
+        updateComparisonPlots(kmeansPlotElement, gmmPlotElement, comparisonParams);
+    });
+    
+    // Create slider for vertical stretch
+    createSlider(controlsDiv, 'Vertical Stretch', 0.5, 5, 2.0, 0.5, value => {
+        const stretch = parseFloat(value);
+        comparisonParams.cluster1.cov = [[0.5, 0], [0, stretch]];
+        comparisonParams.cluster2.cov = [[0.5, 0], [0, stretch]];
+        updateComparisonPlots(kmeansPlotElement, gmmPlotElement, comparisonParams);
+    });
+    
+    // Create slider for rotation
+    createSlider(controlsDiv, 'Cluster Rotation', 0, 90, 0, 15, value => {
+        const angle = parseFloat(value) * Math.PI / 180;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        
+        // Rotate the covariance matrices
+        const baseCov = [[0.5, 0], [0, comparisonParams.cluster1.cov[1][1]]];
+        comparisonParams.cluster1.cov = rotateCovarianceMatrix(baseCov, angle);
+        comparisonParams.cluster2.cov = rotateCovarianceMatrix(baseCov, angle);
+        
+        updateComparisonPlots(kmeansPlotElement, gmmPlotElement, comparisonParams);
+    });
 }
 
-// Create K-Means visualization
-function createKMeansPlot(element) {
-    // Generate synthetic data that clearly shows K-Means limitations
-    const cluster1 = generateGaussianCluster(100, [-2, 0], [[0.5, 0], [0, 2.0]]);
-    const cluster2 = generateGaussianCluster(100, [2, 0], [[0.5, 0], [0, 2.0]]);
+// Helper function to rotate a covariance matrix
+function rotateCovarianceMatrix(cov, angle) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const rotMatrix = [[cos, -sin], [sin, cos]];
     
-    // Combine all data
+    // Apply rotation: R * Σ * R^T
+    // First compute R * Σ
+    const temp = [
+        [rotMatrix[0][0] * cov[0][0] + rotMatrix[0][1] * cov[1][0], 
+         rotMatrix[0][0] * cov[0][1] + rotMatrix[0][1] * cov[1][1]],
+        [rotMatrix[1][0] * cov[0][0] + rotMatrix[1][1] * cov[1][0],
+         rotMatrix[1][0] * cov[0][1] + rotMatrix[1][1] * cov[1][1]]
+    ];
+    
+    // Then compute (R * Σ) * R^T
+    return [
+        [temp[0][0] * rotMatrix[0][0] + temp[0][1] * rotMatrix[0][1],
+         temp[0][0] * rotMatrix[1][0] + temp[0][1] * rotMatrix[1][1]],
+        [temp[1][0] * rotMatrix[0][0] + temp[1][1] * rotMatrix[0][1],
+         temp[1][0] * rotMatrix[1][0] + temp[1][1] * rotMatrix[1][1]]
+    ];
+}
+
+// Update both comparison plots with new parameters
+function updateComparisonPlots(kmeansElement, gmmElement, params) {
+    // Generate synthetic data
+    const cluster1 = generateGaussianCluster(
+        params.cluster1.n,
+        params.cluster1.mean,
+        params.cluster1.cov
+    );
+    
+    const cluster2 = generateGaussianCluster(
+        params.cluster2.n,
+        params.cluster2.mean,
+        params.cluster2.cov
+    );
+    
+    // Combine data
     const allX = cluster1.x.concat(cluster2.x);
     const allY = cluster1.y.concat(cluster2.y);
+    const trueLabels = Array(cluster1.x.length).fill(0).concat(Array(cluster2.x.length).fill(1));
     
-    // Simulate K-Means clustering with a vertical decision boundary at x=0
-    const assignedCluster = allX.map(x => x < 0 ? 0 : 1);
+    // K-Means plot (simple vertical decision boundary at x=0)
+    const kmeansLabels = allX.map(x => x < 0 ? 0 : 1);
     
-    // Create scatter plot with K-Means clusters
-    const data = [
+    // Calculate decision boundary for K-Means
+    const kmeansData = [
         {
             x: allX,
             y: allY,
             mode: 'markers',
             type: 'scatter',
             marker: {
-                color: assignedCluster,
+                color: kmeansLabels,
                 colorscale: 'Portland',
                 size: 8,
                 opacity: 0.7
@@ -209,88 +471,82 @@ function createKMeansPlot(element) {
         }
     ];
     
-    const layout = {
+    const kmeansLayout = {
         title: 'K-Means Clustering',
-        xaxis: { title: 'Feature 1', range: [-4, 4] },
-        yaxis: { title: 'Feature 2', range: [-4, 4] },
+        xaxis: { title: 'Feature 1', range: [-5, 5] },
+        yaxis: { title: 'Feature 2', range: [-5, 5] },
         margin: { t: 40, r: 10, l: 40, b: 40 },
         showlegend: false
     };
     
-    Plotly.newPlot(element, data, layout, {responsive: true});
-}
-
-// Create GMM comparison visualization
-function createGMMComparisonPlot(element) {
-    // Use same data as K-Means
-    const cluster1 = generateGaussianCluster(100, [-2, 0], [[0.5, 0], [0, 2.0]]);
-    const cluster2 = generateGaussianCluster(100, [2, 0], [[0.5, 0], [0, 2.0]]);
+    Plotly.react(kmeansElement, kmeansData, kmeansLayout, {responsive: true});
     
-    // Combine all data
-    const allX = cluster1.x.concat(cluster2.x);
-    const allY = cluster1.y.concat(cluster2.y);
-    
-    // Instead of decision boundary, show probability contours
-    const xGrid = numeric.linspace(-4, 4, 100);
-    const yGrid = numeric.linspace(-4, 4, 100);
-    const zGrid = [];
-    
-    // Create simple GMM manually for visualization
-    const means = [[-2, 0], [2, 0]];
-    const covars = [[[0.5, 0], [0, 2.0]], [[0.5, 0], [0, 2.0]]];
+    // GMM Plot
+    const means = [params.cluster1.mean, params.cluster2.mean];
+    const covars = [params.cluster1.cov, params.cluster2.cov];
     const weights = [0.5, 0.5];
     
-    // Calculate probabilities on grid
+    // Calculate decision boundary for GMM (probability contours)
+    const xGrid = numeric.linspace(-5, 5, 100);
+    const yGrid = numeric.linspace(-5, 5, 100);
+    const zGrid = [];
+    
+    // Calculate GMM probabilities on grid
     for (let i = 0; i < xGrid.length; i++) {
         zGrid[i] = [];
         for (let j = 0; j < yGrid.length; j++) {
-            // Calculate mixture probability
-            let prob = 0;
-            for (let k = 0; k < weights.length; k++) {
-                prob += weights[k] * gaussianPDF([xGrid[i], yGrid[j]], means[k], covars[k]);
-            }
-            zGrid[i][j] = prob;
+            // Calculate Gaussian probabilities
+            const prob1 = weights[0] * gaussianPDF([xGrid[i], yGrid[j]], means[0], covars[0]);
+            const prob2 = weights[1] * gaussianPDF([xGrid[i], yGrid[j]], means[1], covars[1]);
+            
+            // Assign higher probability cluster
+            zGrid[i][j] = prob1 > prob2 ? 0 : 1;
         }
     }
     
-    // Create scatter plot with GMM contours
-    const data = [
-        // Contour plot for GMM probabilities
+    // Create GMM plot with contours
+    const gmmData = [
+        // Probability contours
         {
             z: zGrid,
             x: xGrid,
             y: yGrid,
             type: 'contour',
             colorscale: 'Portland',
-            opacity: 0.7,
             showscale: false,
             contours: {
-                coloring: 'fill',
-                showlabels: false
-            }
+                start: 0,
+                end: 1,
+                size: 1,
+                coloring: 'heatmap'
+            },
+            opacity: 0.5,
+            hoverinfo: 'none'
         },
-        // Scatter plot of data
+        // Data points
         {
             x: allX,
             y: allY,
             mode: 'markers',
             type: 'scatter',
             marker: {
-                color: 'rgba(0, 0, 0, 0.6)',
-                size: 6
+                color: trueLabels,
+                colorscale: 'Portland',
+                size: 8,
+                opacity: 0.7
             }
         }
     ];
     
-    const layout = {
+    const gmmLayout = {
         title: 'GMM Clustering',
-        xaxis: { title: 'Feature 1', range: [-4, 4] },
-        yaxis: { title: 'Feature 2', range: [-4, 4] },
+        xaxis: { title: 'Feature 1', range: [-5, 5] },
+        yaxis: { title: 'Feature 2', range: [-5, 5] },
         margin: { t: 40, r: 10, l: 40, b: 40 },
         showlegend: false
     };
     
-    Plotly.newPlot(element, data, layout, {responsive: true});
+    Plotly.react(gmmElement, gmmData, gmmLayout, {responsive: true});
 }
 
 // Create GMM result plot

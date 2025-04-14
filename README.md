@@ -1,7 +1,5 @@
 # Gaussian Mixture Models Tutorial
 
-This is a web-based tutorial on Model-based Clustering with Gaussian Mixture Models. The tutorial provides an interactive learning experience with visualizations and explanations of GMM concepts.
-
 ## Features
 
 - Comprehensive introduction to clustering and GMMs
