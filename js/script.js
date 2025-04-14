@@ -34,6 +34,10 @@ document.addEventListener('DOMContentLoaded', function() {
     createSoftClusteringPlot();
     createAicBicPlot();
     
+    // Create algorithm walkthrough plots
+    createEMProcessPlot();
+    createLikelihoodPlot();
+    
     // Apply dark theme to all plots
     document.querySelectorAll('.js-plotly-plot').forEach(plot => {
         Plotly.relayout(plot, darkThemeLayout);
@@ -953,4 +957,258 @@ const numeric = {
         }
         return result;
     }
-}; 
+};
+
+// Create EM process visualization
+function createEMProcessPlot() {
+    const plotElement = document.getElementById('em-process-plot');
+    if (!plotElement) return;
+    
+    // Generate synthetic data for demonstration
+    const cluster1 = generateGaussianCluster(100, [-2, -2], [[1, 0], [0, 1]]);
+    const cluster2 = generateGaussianCluster(100, [0, 2], [[1, 0.5], [0.5, 1]]);
+    const cluster3 = generateGaussianCluster(100, [3, 0], [[1, -0.7], [-0.7, 1]]);
+    
+    // Combine data
+    const allX = cluster1.x.concat(cluster2.x, cluster3.x);
+    const allY = cluster1.y.concat(cluster2.y, cluster3.y);
+    const trueLabels = Array(cluster1.x.length).fill(0)
+        .concat(Array(cluster2.x.length).fill(1))
+        .concat(Array(cluster3.x.length).fill(2));
+    
+    // Simulated EM iterations
+    // These represent the evolution of means and covariances over iterations
+    const iterations = [
+        // Initial state (K-means initialization)
+        {
+            means: [[-1.8, -1.5], [0.2, 1.8], [2.8, 0.2]],
+            covs: [
+                [[1, 0], [0, 1]],
+                [[1, 0], [0, 1]],
+                [[1, 0], [0, 1]]
+            ]
+        },
+        // After iteration 1
+        {
+            means: [[-1.9, -1.7], [0.1, 1.9], [2.9, 0.1]],
+            covs: [
+                [[1.2, 0.1], [0.1, 1.1]],
+                [[1.1, 0.3], [0.3, 1.2]],
+                [[1.0, -0.4], [-0.4, 1.3]]
+            ]
+        },
+        // After iteration 2
+        {
+            means: [[-2.0, -1.9], [0.0, 2.0], [3.0, 0.0]],
+            covs: [
+                [[1.0, 0.0], [0.0, 1.0]],
+                [[1.0, 0.5], [0.5, 1.0]],
+                [[1.0, -0.6], [-0.6, 1.5]]
+            ]
+        },
+        // Final iteration (converged)
+        {
+            means: [[-2.0, -2.0], [0.0, 2.0], [3.0, 0.0]],
+            covs: [
+                [[1.0, 0.0], [0.0, 1.0]],
+                [[1.0, 0.5], [0.5, 1.0]],
+                [[1.0, -0.7], [-0.7, 1.0]]
+            ]
+        }
+    ];
+    
+    // Prepare frames for animation
+    const frames = iterations.map((iteration, i) => {
+        // Create ellipses for the current iteration
+        const ellipses = createGMMEllipses({
+            means: iteration.means,
+            covariances: iteration.covs
+        });
+        
+        // Combine data points with ellipses for this iteration
+        return {
+            name: `iteration-${i}`,
+            data: [
+                // Data points
+                {
+                    x: allX,
+                    y: allY,
+                    mode: 'markers',
+                    type: 'scatter',
+                    marker: {
+                        color: trueLabels,
+                        colorscale: 'Plasma',
+                        size: 8,
+                        opacity: 0.7
+                    },
+                    name: 'Data Points'
+                },
+                // Means
+                {
+                    x: iteration.means.map(m => m[0]),
+                    y: iteration.means.map(m => m[1]),
+                    mode: 'markers',
+                    type: 'scatter',
+                    marker: {
+                        color: '#bb86fc',
+                        size: 12,
+                        symbol: 'x',
+                        line: {
+                            width: 2,
+                            color: '#03dac6'
+                        }
+                    },
+                    name: 'Cluster Means'
+                },
+                // Ellipses for each cluster
+                ...ellipses
+            ]
+        };
+    });
+    
+    // Create the initial plot with the first frame
+    const data = frames[0].data;
+    
+    const layout = {
+        title: 'EM Algorithm Progress',
+        xaxis: { 
+            title: 'Feature 1', 
+            range: [-5, 5],
+            gridcolor: '#333333',
+            zerolinecolor: '#555555'
+        },
+        yaxis: { 
+            title: 'Feature 2', 
+            range: [-5, 5],
+            gridcolor: '#333333',
+            zerolinecolor: '#555555'
+        },
+        margin: { t: 40, r: 20, l: 40, b: 40 },
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: {
+            color: '#e0e0e0'
+        },
+        updatemenus: [{
+            type: 'buttons',
+            showactive: false,
+            y: 0,
+            x: 0.1,
+            xanchor: 'right',
+            yanchor: 'top',
+            pad: {t: 60, r: 20},
+            buttons: [{
+                label: 'Play',
+                method: 'animate',
+                args: [null, {
+                    fromcurrent: true,
+                    frame: {duration: 500, redraw: true},
+                    transition: {duration: 500}
+                }]
+            }, {
+                label: 'Pause',
+                method: 'animate',
+                args: [[null], {
+                    mode: 'immediate',
+                    transition: {duration: 0},
+                    frame: {duration: 0, redraw: false}
+                }]
+            }]
+        }],
+        sliders: [{
+            active: 0,
+            steps: frames.map((frame, i) => ({
+                label: `Iteration ${i}`,
+                method: 'animate',
+                args: [[`iteration-${i}`], {
+                    mode: 'immediate',
+                    transition: {duration: 300},
+                    frame: {duration: 300, redraw: true}
+                }]
+            })),
+            x: 0.1,
+            y: 0,
+            len: 0.9,
+            xanchor: 'left',
+            yanchor: 'top',
+            pad: {t: 50, b: 10},
+            currentvalue: {
+                visible: true,
+                prefix: 'Iteration: ',
+                xanchor: 'right',
+                font: {size: 14, color: '#e0e0e0'}
+            },
+            transition: {duration: 300}
+        }]
+    };
+    
+    // Create the plot with animation capabilities
+    Plotly.newPlot(plotElement, data, layout, {responsive: true})
+        .then(function() {
+            // Add the frames for animation
+            Plotly.addFrames(plotElement, frames.map((frame, i) => ({
+                name: `iteration-${i}`,
+                data: frame.data
+            })));
+        });
+}
+
+// Create log-likelihood convergence plot
+function createLikelihoodPlot() {
+    const plotElement = document.getElementById('likelihood-plot');
+    if (!plotElement) return;
+    
+    // Simulated log-likelihood values across iterations
+    // These would increase monotonically as the EM algorithm converges
+    const iterations = Array.from({length: 10}, (_, i) => i);
+    const logLikelihood = [
+        -1200,   // Initial value
+        -950,    // After iteration 1
+        -850,    // After iteration 2
+        -800,    // ...
+        -780,
+        -770,
+        -765,
+        -763,
+        -762,    // Almost converged
+        -761.5   // Final value
+    ];
+    
+    const trace = {
+        x: iterations,
+        y: logLikelihood,
+        mode: 'lines+markers',
+        line: {
+            color: '#bb86fc',
+            width: 3
+        },
+        marker: {
+            color: '#03dac6',
+            size: 10
+        }
+    };
+    
+    const layout = {
+        title: 'Log-Likelihood Convergence',
+        xaxis: {
+            title: 'Iteration',
+            gridcolor: '#333333',
+            zerolinecolor: '#555555'
+        },
+        yaxis: {
+            title: 'Log-Likelihood',
+            gridcolor: '#333333',
+            zerolinecolor: '#555555'
+        },
+        margin: { t: 40, r: 20, l: 50, b: 40 },
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: {
+            color: '#e0e0e0'
+        }
+    };
+    
+    Plotly.newPlot(plotElement, [trace], layout, {responsive: true});
+} 
