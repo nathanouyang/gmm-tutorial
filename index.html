@@ -68,213 +68,65 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <h3>The Algorithm Behind GMM</h3>
-                    <p>The Gaussian Mixture Model uses the Expectation-Maximization (EM) algorithm to find the maximum likelihood parameters of the mixture model. Below we'll explore exactly how this iterative process works, with both mathematical explanations and code implementation.</p>
+                    <p>The Gaussian Mixture Model uses the Expectation-Maximization (EM) algorithm to find the maximum likelihood parameters of the mixture model. This iterative algorithm allows us to find the parameters of a statistical model where there are unobserved latent variables - in this case, the cluster assignments.</p>
                 </div>
             </div>
             
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <h3>1. Initialization</h3>
-                    <p>We start by initializing the parameters of our model:</p>
-                    <ul>
-                        <li><strong>Means (μ<sub>k</sub>)</strong>: Initial values for each cluster center</li>
-                        <li><strong>Covariances (Σ<sub>k</sub>)</strong>: Initial covariance matrices for each cluster</li>
-                        <li><strong>Mixture weights (π<sub>k</sub>)</strong>: Initial probabilities for each cluster</li>
-                    </ul>
-                    <p>Initialization is crucial as the EM algorithm can converge to local optima. Common strategies include:</p>
-                    <ul>
-                        <li>Random initialization (randomly choose data points as initial means)</li>
-                        <li>K-means initialization (use K-means to find initial cluster centers)</li>
-                        <li>Multiple restarts with different initializations</li>
-                    </ul>
-                    <pre class="code-block"><code class="python">
-# Initialization with K-means (scikit-learn's default)
-import numpy as np
-from sklearn.cluster import KMeans
-
-# Generate simple 2D data for illustration
-np.random.seed(42)
-# Create data with 3 clusters
-X1 = np.random.multivariate_normal([-2, -2], [[1, 0], [0, 1]], 100)
-X2 = np.random.multivariate_normal([0, 2], [[1, 0.5], [0.5, 1]], 100)
-X3 = np.random.multivariate_normal([3, 0], [[1, -0.7], [-0.7, 1]], 100)
-X = np.vstack([X1, X2, X3])
-
-# Initialize with K-means
-n_components = 3
-kmeans = KMeans(n_clusters=n_components, n_init=10, random_state=42)
-kmeans.fit(X)
-initial_means = kmeans.cluster_centers_
-
-# Initialize covariances as identity matrices
-initial_covs = [np.eye(X.shape[1]) for _ in range(n_components)]
-
-# Initialize weights uniformly
-initial_weights = np.ones(n_components) / n_components
-
-print("Initial means:\n", initial_means)
-print("Initial weights:", initial_weights)
-                    </code></pre>
-                </div>
-                <div class="col-md-6">
-                    <h3>2. The EM Algorithm Iterations</h3>
-                    <p>The EM algorithm alternates between two steps:</p>
+                    <h3>1. Model Definition</h3>
+                    <p>A Gaussian Mixture Model represents a probability distribution as a weighted sum of K Gaussian components:</p>
+                    
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h4>E-Step (Expectation)</h4>
-                            <p>Compute the "responsibilities" - the probability that each data point belongs to each cluster, given the current parameter estimates.</p>
-                            <p>For each data point x<sub>i</sub> and each cluster k, the responsibility is:</p>
                             <div class="formula-display">
-                                γ(z<sub>ik</sub>) = p(z<sub>k</sub>|x<sub>i</sub>, θ) = 
-                                \frac{π<sub>k</sub> \mathcal{N}(x<sub>i</sub>|μ<sub>k</sub>, Σ<sub>k</sub>)}
-                                {\sum_{j=1}^{K} π<sub>j</sub> \mathcal{N}(x<sub>i</sub>|μ<sub>j</sub>, Σ<sub>j</sub>)}
+                                p(\mathbf{x}) = \sum_{k=1}^{K} \pi_k \mathcal{N}(\mathbf{x}|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)
                             </div>
-                            <p>Where z<sub>k</sub> is the kth cluster assignment, and θ represents all parameters.</p>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <h4>M-Step (Maximization)</h4>
-                            <p>Update the parameters using the current responsibilities:</p>
-                            <ul>
-                                <li><strong>Update means:</strong> μ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>i</sub> γ(z<sub>ik</sub>)x<sub>i</sub></li>
-                                <li><strong>Update covariances:</strong> Σ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>i</sub> γ(z<sub>ik</sub>)(x<sub>i</sub>-μ<sub>k</sub>)(x<sub>i</sub>-μ<sub>k</sub>)<sup>T</sup></li>
-                                <li><strong>Update weights:</strong> π<sub>k</sub> = N<sub>k</sub>/N</li>
-                            </ul>
-                            <p>Where N<sub>k</sub> = Σ<sub>i</sub> γ(z<sub>ik</sub>) is the effective number of points assigned to cluster k.</p>
-                        </div>
-                    </div>
+                    
+                    <p>Where:</p>
+                    <ul>
+                        <li><strong>p(x)</strong> is the probability density at point x</li>
+                        <li><strong>K</strong> is the number of mixture components (clusters)</li>
+                        <li><strong>π<sub>k</sub></strong> are the mixture weights (must sum to 1)</li>
+                        <li><strong>N(x|μ<sub>k</sub>, Σ<sub>k</sub>)</strong> is the probability density of the multivariate Gaussian distribution with mean μ<sub>k</sub> and covariance matrix Σ<sub>k</sub></li>
+                    </ul>
+                    
+                    <p>The model parameters we need to estimate are:</p>
+                    <ul>
+                        <li>Mixture weights: π<sub>1</sub>, π<sub>2</sub>, ..., π<sub>K</sub></li>
+                        <li>Means: μ<sub>1</sub>, μ<sub>2</sub>, ..., μ<sub>K</sub></li>
+                        <li>Covariance matrices: Σ<sub>1</sub>, Σ<sub>2</sub>, ..., Σ<sub>K</sub></li>
+                    </ul>
                 </div>
-            </div>
-            
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h3>3. Python Implementation of the EM Steps</h3>
-                    <p>Let's see how the EM algorithm would be implemented in Python:</p>
-                    <pre class="code-block"><code class="python">
-def gaussian_pdf(x, mean, cov):
-    """Evaluate multivariate Gaussian PDF at point x"""
-    n = mean.shape[0]
-    det = np.linalg.det(cov)
-    inv = np.linalg.inv(cov)
-    norm_const = 1.0 / (np.power(2 * np.pi, n/2) * np.sqrt(det))
-    x_mean = x - mean
-    result = norm_const * np.exp(-0.5 * x_mean.T @ inv @ x_mean)
-    return result
-
-def em_algorithm(X, initial_means, initial_covs, initial_weights, max_iter=100, tol=1e-6):
-    """Custom implementation of EM for GMM"""
-    n_samples, n_features = X.shape
-    n_components = len(initial_means)
-    
-    # Initialize parameters
-    means = initial_means.copy()
-    covs = initial_covs.copy()
-    weights = initial_weights.copy()
-    
-    # Initialize log-likelihood
-    log_likelihood = 0
-    
-    # Visualization data
-    all_means = [means.copy()]
-    all_covs = [covs.copy()]
-    all_weights = [weights.copy()]
-    all_log_likelihood = []
-    
-    # EM iterations
-    for iteration in range(max_iter):
-        # Store previous log-likelihood
-        prev_log_likelihood = log_likelihood
-        
-        #------------------------
-        # E-step: Calculate responsibilities
-        #------------------------
-        responsibilities = np.zeros((n_samples, n_components))
-        
-        for i in range(n_samples):
-            # Calculate probability of x_i under each Gaussian
-            pdf_values = np.array([
-                weights[k] * gaussian_pdf(X[i], means[k], covs[k])
-                for k in range(n_components)
-            ])
-            
-            # Normalize to get responsibilities
-            responsibilities[i] = pdf_values / np.sum(pdf_values)
-        
-        #------------------------
-        # M-step: Update parameters
-        #------------------------
-        # Effective number of points in each cluster
-        N_k = np.sum(responsibilities, axis=0)
-        
-        # Update means
-        new_means = np.zeros_like(means)
-        for k in range(n_components):
-            # Weighted sum of data points
-            new_means[k] = np.sum(responsibilities[:, k, np.newaxis] * X, axis=0) / N_k[k]
-        means = new_means
-        
-        # Update covariances
-        new_covs = []
-        for k in range(n_components):
-            diff = X - means[k]
-            # Weighted covariance calculation
-            cov_k = np.zeros((n_features, n_features))
-            for i in range(n_samples):
-                x_diff = diff[i].reshape(-1, 1)
-                cov_k += responsibilities[i, k] * (x_diff @ x_diff.T)
-            cov_k /= N_k[k]
-            
-            # Add small regularization to ensure positive definiteness
-            cov_k += 1e-6 * np.eye(n_features)
-            new_covs.append(cov_k)
-        covs = new_covs
-        
-        # Update weights
-        weights = N_k / n_samples
-        
-        # Calculate log-likelihood
-        log_likelihood = 0
-        for i in range(n_samples):
-            log_likelihood += np.log(sum([
-                weights[k] * gaussian_pdf(X[i], means[k], covs[k])
-                for k in range(n_components)
-            ]))
-        
-        # Store current parameters
-        all_means.append(means.copy())
-        all_covs.append(covs.copy())
-        all_weights.append(weights.copy())
-        all_log_likelihood.append(log_likelihood)
-        
-        # Check for convergence
-        if abs(log_likelihood - prev_log_likelihood) < tol:
-            break
-    
-    return means, covs, weights, all_means, all_covs, all_weights, all_log_likelihood
-
-# Run our EM algorithm on the data
-means, covs, weights, all_means, all_covs, all_weights, all_log_likelihood = em_algorithm(
-    X, initial_means, initial_covs, initial_weights
-)
-
-print(f"Final means after EM:\n{means}")
-print(f"Final weights: {weights}")
-                    </code></pre>
+                <div class="col-md-6">
+                    <h3>2. Latent Variables and Log-Likelihood</h3>
+                    <p>For each data point x<sub>i</sub>, we introduce a latent variable z<sub>i</sub> representing which component generated that point. We can think of z<sub>i</sub> as a K-dimensional one-hot vector where z<sub>ik</sub> = 1 if point i belongs to component k, and 0 otherwise.</p>
+                    
+                    <p>The complete-data log-likelihood (if we knew the latent variables) would be:</p>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="formula-display">
+                                \ln p(\mathbf{X}, \mathbf{Z}|\boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = \sum_{i=1}^{N} \sum_{k=1}^{K} z_{ik} \ln(\pi_k \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k))
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p>However, we don't know the true assignments, so we use the EM algorithm to iteratively optimize this likelihood.</p>
                 </div>
             </div>
             
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <h3>4. Visualizing the EM Process</h3>
-                    <p>A key insight into the EM algorithm is seeing how it evolves over iterations. At each step:</p>
+                    <h3>3. Initialization</h3>
+                    <p>We begin by initializing the parameters of our model. Proper initialization is crucial as the EM algorithm can converge to local optima. Common initialization strategies include:</p>
                     <ul>
-                        <li>Cluster means shift toward dense regions of data</li>
-                        <li>Covariance matrices adapt to the shape of clusters</li>
-                        <li>Mixture weights adjust based on the proportion of points assigned to each cluster</li>
-                        <li>Log-likelihood increases until convergence</li>
+                        <li><strong>Random initialization:</strong> Randomly select K data points as initial means, initialize covariances as identity matrices, and set weights to 1/K.</li>
+                        <li><strong>K-means initialization:</strong> Run K-means clustering first and use the resulting centroids as initial means.</li>
+                        <li><strong>Multiple restarts:</strong> Run the algorithm multiple times with different initializations and select the best result.</li>
                     </ul>
-                    <p>The visualization on the right shows how the algorithm progresses from initialization to convergence, demonstrating the EM algorithm's ability to identify complex cluster structures.</p>
                 </div>
                 <div class="col-md-6">
                     <div class="plot-container" id="em-process-plot"></div>
@@ -283,144 +135,65 @@ print(f"Final weights: {weights}")
             </div>
             
             <div class="row mb-4">
-                <div class="col-md-7">
-                    <h3>5. Convergence</h3>
-                    <p>The EM algorithm is guaranteed to increase the log-likelihood at each iteration. The algorithm typically converges when:</p>
-                    <ul>
-                        <li>The change in log-likelihood between iterations falls below a threshold, or</li>
-                        <li>The maximum number of iterations is reached.</li>
-                    </ul>
-                    <p>However, it's important to note that EM only guarantees convergence to a <em>local</em> maximum of the likelihood function, not necessarily the global maximum. This is why initialization is crucial, and multiple runs with different starting points are often used.</p>
-                    <pre class="code-block"><code class="python">
-# Plot log-likelihood over iterations to visualize convergence
-import matplotlib.pyplot as plt
-
-plt.figure(figsize=(10, 5))
-plt.plot(all_log_likelihood, 'o-')
-plt.title('Log-Likelihood vs Iteration')
-plt.xlabel('Iteration')
-plt.ylabel('Log-Likelihood')
-plt.grid(True)
-plt.tight_layout()
-plt.show()
-                    </code></pre>
-                </div>
-                <div class="col-md-5">
-                    <div class="plot-container" id="likelihood-plot"></div>
-                    <p class="text-center">Log-likelihood increases with each iteration until convergence</p>
+                <div class="col-12">
+                    <h3>4. Expectation-Maximization (EM) Algorithm</h3>
+                    <p>The EM algorithm alternates between two steps:</p>
                 </div>
             </div>
             
             <div class="row mb-4">
-                <div class="col-12">
-                    <h3>6. Comparison with scikit-learn's Implementation</h3>
-                    <p>Let's compare our manual implementation with scikit-learn's optimized implementation:</p>
-                    <pre class="code-block"><code class="python">
-from sklearn.mixture import GaussianMixture
-
-# Initialize GMM with same parameters as our implementation
-gmm = GaussianMixture(
-    n_components=3,
-    means_init=initial_means,
-    weights_init=initial_weights,
-    precisions_init=[np.linalg.inv(cov) for cov in initial_covs],
-    random_state=42
-)
-
-# Fit the model
-gmm.fit(X)
-
-# Print results
-print("Scikit-learn means:\n", gmm.means_)
-print("Scikit-learn weights:", gmm.weights_)
-
-# Predict cluster assignments
-labels = gmm.predict(X)
-
-# Visualize results
-plt.figure(figsize=(10, 8))
-plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.7)
-    
-# Plot the means and covariance ellipses
-from matplotlib.patches import Ellipse
-
-def plot_ellipse(pos, cov, ax=None, **kwargs):
-    """Plot an ellipse based on a covariance matrix."""
-    ax = ax or plt.gca()
-    
-    # Calculate eigenvalues and eigenvectors
-    vals, vecs = np.linalg.eigh(cov)
-    order = vals.argsort()[::-1]
-    vals = vals[order]
-    vecs = vecs[:, order]
-    
-    # Width and height of ellipse
-    width, height = 2 * np.sqrt(vals)
-    
-    # Rotation in degrees
-    theta = np.degrees(np.arctan2(vecs[1, 0], vecs[0, 0]))
-    
-    # Draw the ellipse
-    ellipse = Ellipse(
-        xy=pos, width=width, height=height,
-        angle=theta, **kwargs
-    )
-    ax.add_patch(ellipse)
-    return ellipse
-
-plt.figure(figsize=(10, 8))
-
-# Plot the data points
-plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.7)
-
-# Plot the means and covariance ellipses
-for i, (mean, covar) in enumerate(zip(gmm.means_, gmm.covariances_)):
-    plot_ellipse(
-        mean, covar, 
-        edgecolor='red', 
-        facecolor='none', 
-        linewidth=2, 
-        alpha=0.8
-    )
-    plt.scatter(mean[0], mean[1], s=100, c='red', marker='x')
-
-plt.xlim(-6, 6)
-plt.ylim(-6, 6)
-plt.xlabel('Feature 1')
-plt.ylabel('Feature 2')
-plt.title('GMM Clustering Results')
-plt.tight_layout()
-plt.show()
-                    </code></pre>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h4>E-Step (Expectation)</h4>
+                            <p>In the E-step, we estimate the expected values of the latent variables given our current model parameters. This results in computing "responsibilities" - the posterior probability that component k generated data point i:</p>
+                            <div class="formula-display">
+                                \gamma(z_{ik}) = \frac{\pi_k \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)}{\sum_{j=1}^{K} \pi_j \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_j, \boldsymbol{\Sigma}_j)}
+                            </div>
+                            <p>These responsibilities replace the unknown binary indicators z<sub>ik</sub> with their expected values. Each data point now has a probability distribution over all K clusters instead of a single cluster assignment.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h4>M-Step (Maximization)</h4>
+                            <p>In the M-step, we update our model parameters to maximize the expected complete-data log-likelihood, using the responsibilities from the E-step:</p>
+                            <div class="formula-display">
+                                \boldsymbol{\mu}_k^{new} = \frac{\sum_{i=1}^{N} \gamma(z_{ik}) \mathbf{x}_i}{\sum_{i=1}^{N} \gamma(z_{ik})}
+                            </div>
+                            <div class="formula-display">
+                                \boldsymbol{\Sigma}_k^{new} = \frac{\sum_{i=1}^{N} \gamma(z_{ik}) (\mathbf{x}_i - \boldsymbol{\mu}_k^{new})(\mathbf{x}_i - \boldsymbol{\mu}_k^{new})^T}{\sum_{i=1}^{N} \gamma(z_{ik})}
+                            </div>
+                            <div class="formula-display">
+                                \pi_k^{new} = \frac{\sum_{i=1}^{N} \gamma(z_{ik})}{N}
+                            </div>
+                            <p>We can interpret N<sub>k</sub> = Σ<sub>i</sub> γ(z<sub>ik</sub>) as the effective number of points assigned to cluster k.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>7. Practical Considerations</h3>
+            <div class="row mb-4">
+                <div class="col-md-7">
+                    <h3>5. Convergence</h3>
+                    <p>After each E-step and M-step iteration, we repeat the process until the algorithm converges. Convergence can be determined by:</p>
                     <ul>
-                        <li><strong>Initialization Strategies:</strong> K-means initialization often works well, but multiple restarts can help avoid poor local optima.</li>
-                        <li><strong>Covariance Regularization:</strong> Adding a small constant to the diagonal of covariance matrices ensures numerical stability.</li>
-                        <li><strong>Handling Degenerate Cases:</strong> When a cluster has very few points, its covariance can become ill-conditioned.</li>
-                        <li><strong>Computational Complexity:</strong> The EM algorithm scales as O(NKD²) where N is the number of samples, K is the number of components, and D is the dimensionality of the data.</li>
-                        <li><strong>Memory Requirements:</strong> Storing responsibilities for all points across all clusters requires O(NK) memory.</li>
+                        <li>Monitoring the change in log-likelihood between iterations</li>
+                        <li>Checking if the parameter updates fall below some threshold</li>
+                        <li>Reaching a maximum number of iterations</li>
                     </ul>
+                    <p>The log-likelihood is guaranteed to increase (or remain the same) with each iteration, ensuring eventual convergence. However, it may converge to a local maximum rather than the global maximum.</p>
+                    <p>The log-likelihood can be computed as:</p>
+                    <div class="formula-display">
+                        \ln p(\mathbf{X}|\boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = \sum_{i=1}^{N} \ln \left( \sum_{k=1}^{K} \pi_k \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k) \right)
+                    </div>
+                    
+                    <p>Once the algorithm converges, we have our final model parameters - the mixture weights π<sub>k</sub>, mean vectors μ<sub>k</sub>, and covariance matrices Σ<sub>k</sub> for each of the K components. These parameters completely define our Gaussian Mixture Model and can be used for clustering, density estimation, or generating new samples from the learned distribution.</p>
                 </div>
-                <div class="col-md-6">
-                    <h3>8. Advanced Variations</h3>
-                    <ul>
-                        <li><strong>Constrained Covariance Types:</strong>
-                            <ul>
-                                <li>'full': Each component has its own unrestricted covariance matrix</li>
-                                <li>'tied': All components share the same covariance matrix</li>
-                                <li>'diag': Each component has its own diagonal covariance matrix</li>
-                                <li>'spherical': Each component has its own single variance parameter</li>
-                            </ul>
-                        </li>
-                        <li><strong>Variational Bayesian GMM:</strong> Automatically determines the effective number of components by using a Dirichlet process prior.</li>
-                        <li><strong>Stochastic EM:</strong> For large datasets, updates can be performed on mini-batches for computational efficiency.</li>
-                        <li><strong>GMM with Missing Data:</strong> The EM algorithm can be extended to handle incomplete data.</li>
-                    </ul>
+                <div class="col-md-5">
+                    <div class="plot-container" id="likelihood-plot"></div>
+                    <p class="text-center">Log-likelihood increases with each iteration until convergence</p>
                 </div>
             </div>
         </section>
