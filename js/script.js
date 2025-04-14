@@ -27,8 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderFormulas();
     
     // Create interactive plots
-    createSyntheticDataPlot();
-    createGaussian2DPlot();
+    createInteractiveGMMExample();
     createComparisonPlots();
     createGMMResultPlot();
     createSoftClusteringPlot();
@@ -64,210 +63,412 @@ function renderFormulas() {
     });
 }
 
-// Create synthetic data plot
-function createSyntheticDataPlot() {
-    const plotElement = document.getElementById('synthetic-data-plot');
-    if (!plotElement) return;
+// Create interactive GMM example
+function createInteractiveGMMExample() {
+    const dataPlotElement = document.getElementById('interactive-data-plot');
+    const emPlotElement = document.getElementById('interactive-em-plot');
+    const responsibilitiesPlotElement = document.getElementById('interactive-responsibilities-plot');
+    const convergencePlotElement = document.getElementById('interactive-convergence-plot');
     
-    // Initial parameters
-    let cluster1Params = {
-        n: 100,
-        mean: [-3, -2],
-        cov: [[1.5, 0.5], [0.5, 1.0]]
-    };
+    // Check if all elements exist
+    if (!dataPlotElement || !emPlotElement || !responsibilitiesPlotElement || !convergencePlotElement) return;
     
-    let cluster2Params = {
-        n: 150,
-        mean: [2, 2],
-        cov: [[1.0, -0.7], [-0.7, 2.0]]
-    };
+    // Parameters for the simulation
+    let iteration = 0;
+    const maxIterations = 10;
+    const logLikelihoodHistory = [];
     
-    let cluster3Params = {
-        n: 80,
-        mean: [0, -3],
-        cov: [[0.5, 0], [0, 0.5]]
-    };
+    // Initial synthetic data with 3 clusters
+    const cluster1 = generateGaussianCluster(80, [-2.5, -1], [[1.0, 0.3], [0.3, 0.8]]);
+    const cluster2 = generateGaussianCluster(100, [2, 1.5], [[1.2, -0.5], [-0.5, 1.0]]);
+    const cluster3 = generateGaussianCluster(70, [0, -2], [[0.8, 0], [0, 0.8]]);
     
-    // Generate initial data
-    updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    
-    // Create sliders div
-    const slidersDiv = document.createElement('div');
-    slidersDiv.className = 'sliders-container mt-3';
-    plotElement.parentNode.insertBefore(slidersDiv, plotElement.nextSibling);
-    
-    // Create cluster size sliders
-    createSlider(slidersDiv, 'Cluster 1 Size', 20, 200, cluster1Params.n, 10, value => {
-        cluster1Params.n = parseInt(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    createSlider(slidersDiv, 'Cluster 2 Size', 20, 200, cluster2Params.n, 10, value => {
-        cluster2Params.n = parseInt(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    createSlider(slidersDiv, 'Cluster 3 Size', 20, 200, cluster3Params.n, 10, value => {
-        cluster3Params.n = parseInt(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    // Create cluster position sliders
-    const positionDiv = document.createElement('div');
-    positionDiv.className = 'row mt-3';
-    slidersDiv.appendChild(positionDiv);
-    
-    const cluster1Div = document.createElement('div');
-    cluster1Div.className = 'col-md-4';
-    cluster1Div.innerHTML = '<h6>Cluster 1 Position</h6>';
-    positionDiv.appendChild(cluster1Div);
-    
-    createSlider(cluster1Div, 'X', -5, 5, cluster1Params.mean[0], 0.5, value => {
-        cluster1Params.mean[0] = parseFloat(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    createSlider(cluster1Div, 'Y', -5, 5, cluster1Params.mean[1], 0.5, value => {
-        cluster1Params.mean[1] = parseFloat(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    const cluster2Div = document.createElement('div');
-    cluster2Div.className = 'col-md-4';
-    cluster2Div.innerHTML = '<h6>Cluster 2 Position</h6>';
-    positionDiv.appendChild(cluster2Div);
-    
-    createSlider(cluster2Div, 'X', -5, 5, cluster2Params.mean[0], 0.5, value => {
-        cluster2Params.mean[0] = parseFloat(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    createSlider(cluster2Div, 'Y', -5, 5, cluster2Params.mean[1], 0.5, value => {
-        cluster2Params.mean[1] = parseFloat(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    const cluster3Div = document.createElement('div');
-    cluster3Div.className = 'col-md-4';
-    cluster3Div.innerHTML = '<h6>Cluster 3 Position</h6>';
-    positionDiv.appendChild(cluster3Div);
-    
-    createSlider(cluster3Div, 'X', -5, 5, cluster3Params.mean[0], 0.5, value => {
-        cluster3Params.mean[0] = parseFloat(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-    
-    createSlider(cluster3Div, 'Y', -5, 5, cluster3Params.mean[1], 0.5, value => {
-        cluster3Params.mean[1] = parseFloat(value);
-        updateSyntheticDataPlot(plotElement, cluster1Params, cluster2Params, cluster3Params);
-    });
-}
-
-// Update synthetic data plot
-function updateSyntheticDataPlot(element, cluster1Params, cluster2Params, cluster3Params) {
-    // Generate synthetic data for each cluster
-    const cluster1 = generateGaussianCluster(
-        cluster1Params.n, 
-        cluster1Params.mean, 
-        cluster1Params.cov
-    );
-    
-    const cluster2 = generateGaussianCluster(
-        cluster2Params.n, 
-        cluster2Params.mean, 
-        cluster2Params.cov
-    );
-    
-    const cluster3 = generateGaussianCluster(
-        cluster3Params.n, 
-        cluster3Params.mean, 
-        cluster3Params.cov
-    );
-    
-    // Combine all data
+    // Combine data
     const allX = cluster1.x.concat(cluster2.x, cluster3.x);
     const allY = cluster1.y.concat(cluster2.y, cluster3.y);
-    const allColors = Array(cluster1.x.length).fill(0)
+    const trueLabels = Array(cluster1.x.length).fill(0)
         .concat(Array(cluster2.x.length).fill(1))
         .concat(Array(cluster3.x.length).fill(2));
     
-    // Create scatter plot
-    const data = [
-        {
-            x: allX,
-            y: allY,
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                color: allColors,
-                colorscale: 'Plasma',
-                size: 8,
-                opacity: 0.8
-            }
-        }
+    // GMM parameters
+    let weights = [0.33, 0.33, 0.34]; // Initial weights
+    let means = [
+        [-1.5, -0.5],  // Initial mean for cluster 1 (intentionally offset from true means)
+        [1.5, 2],      // Initial mean for cluster 2
+        [0.5, -1.5]    // Initial mean for cluster 3
+    ];
+    let covs = [
+        [[1, 0], [0, 1]],  // Initial covariance for cluster 1
+        [[1, 0], [0, 1]],  // Initial covariance for cluster 2
+        [[1, 0], [0, 1]]   // Initial covariance for cluster 3
     ];
     
+    // Calculate initial responsibilities and log-likelihood
+    let responsibilities = calculateResponsibilities(allX, allY, weights, means, covs);
+    let logLikelihood = calculateLogLikelihood(allX, allY, weights, means, covs);
+    logLikelihoodHistory.push(logLikelihood);
+    
+    // Set up DOM element content
+    updateParameterDisplay(iteration, logLikelihood, weights, means);
+    
+    // Initial data plot
+    createDataPlot(dataPlotElement, allX, allY, trueLabels);
+    
+    // Initial EM plot
+    updateEMPlot(emPlotElement, allX, allY, responsibilities, means, covs);
+    
+    // Initial responsibilities plot
+    updateResponsibilitiesPlot(responsibilitiesPlotElement, responsibilities);
+    
+    // Initial convergence plot
+    updateConvergencePlot(convergencePlotElement, logLikelihoodHistory);
+    
+    // Set up buttons
+    const iterateButton = document.getElementById('em-iterate-btn');
+    const resetButton = document.getElementById('em-reset-btn');
+    
+    if (iterateButton && resetButton) {
+        iterateButton.addEventListener('click', () => {
+            if (iteration < maxIterations) {
+                iteration++;
+                
+                // E-step: Already have responsibilities from previous iteration or initialization
+                
+                // M-step: Update parameters
+                updateParameters(allX, allY, responsibilities, weights, means, covs);
+                
+                // Calculate new responsibilities and log-likelihood
+                responsibilities = calculateResponsibilities(allX, allY, weights, means, covs);
+                logLikelihood = calculateLogLikelihood(allX, allY, weights, means, covs);
+                logLikelihoodHistory.push(logLikelihood);
+                
+                // Update displays
+                updateParameterDisplay(iteration, logLikelihood, weights, means);
+                updateEMPlot(emPlotElement, allX, allY, responsibilities, means, covs);
+                updateResponsibilitiesPlot(responsibilitiesPlotElement, responsibilities);
+                updateConvergencePlot(convergencePlotElement, logLikelihoodHistory);
+                
+                // Disable button if reached max iterations
+                if (iteration >= maxIterations) {
+                    iterateButton.disabled = true;
+                }
+            }
+        });
+        
+        resetButton.addEventListener('click', () => {
+            // Reset all parameters
+            iteration = 0;
+            weights = [0.33, 0.33, 0.34];
+            means = [
+                [-1.5, -0.5],
+                [1.5, 2],
+                [0.5, -1.5]
+            ];
+            covs = [
+                [[1, 0], [0, 1]],
+                [[1, 0], [0, 1]],
+                [[1, 0], [0, 1]]
+            ];
+            
+            // Reset data
+            responsibilities = calculateResponsibilities(allX, allY, weights, means, covs);
+            logLikelihood = calculateLogLikelihood(allX, allY, weights, means, covs);
+            logLikelihoodHistory.length = 0;
+            logLikelihoodHistory.push(logLikelihood);
+            
+            // Update displays
+            updateParameterDisplay(iteration, logLikelihood, weights, means);
+            updateEMPlot(emPlotElement, allX, allY, responsibilities, means, covs);
+            updateResponsibilitiesPlot(responsibilitiesPlotElement, responsibilities);
+            updateConvergencePlot(convergencePlotElement, logLikelihoodHistory);
+            
+            // Re-enable iterate button
+            iterateButton.disabled = false;
+        });
+    }
+}
+
+// Create data plot for the interactive example
+function createDataPlot(element, x, y, labels) {
+    const data = [{
+        x: x,
+        y: y,
+        mode: 'markers',
+        type: 'scatter',
+        marker: {
+            color: labels,
+            colorscale: 'Viridis',
+            size: 8,
+            opacity: 0.7
+        }
+    }];
+    
     const layout = {
-        title: 'Synthetic Data with 3 Clusters',
-        xaxis: { title: 'Feature 1', range: [-8, 8], gridcolor: '#333333', zerolinecolor: '#555555' },
-        yaxis: { title: 'Feature 2', range: [-8, 8], gridcolor: '#333333', zerolinecolor: '#555555' },
-        margin: { t: 40, r: 20, l: 40, b: 40 },
-        hovermode: 'closest',
+        title: 'Synthetic Data',
+        xaxis: { title: 'Feature 1', range: [-5, 5] },
+        yaxis: { title: 'Feature 2', range: [-5, 5] },
+        margin: { t: 40, r: 10, l: 40, b: 40 },
         showlegend: false,
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#1e1e1e',
-        font: {
-            color: '#e0e0e0'
-        }
+        font: { color: '#e0e0e0' }
+    };
+    
+    Plotly.newPlot(element, data, layout, {responsive: true});
+}
+
+// Update the EM plot
+function updateEMPlot(element, x, y, responsibilities, means, covs) {
+    // Create cluster assignments based on highest responsibility
+    const assignments = responsibilities.map(r => {
+        return r.indexOf(Math.max(...r));
+    });
+    
+    // Create ellipses for the covariance matrices
+    const ellipses = createGMMEllipses([
+        { mean: means[0], cov: covs[0], color: 'rgba(68, 1, 84, 0.7)' },
+        { mean: means[1], cov: covs[1], color: 'rgba(59, 82, 139, 0.7)' },
+        { mean: means[2], cov: covs[2], color: 'rgba(33, 145, 140, 0.7)' }
+    ]);
+    
+    const data = [
+        // Scatter plot of data with assigned clusters
+        {
+            x: x,
+            y: y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                color: assignments,
+                colorscale: 'Viridis',
+                size: 8,
+                opacity: 0.7
+            },
+            name: 'Data points'
+        },
+        // Cluster means
+        {
+            x: means.map(m => m[0]),
+            y: means.map(m => m[1]),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                color: 'red',
+                size: 12,
+                symbol: 'x',
+                line: { width: 2 }
+            },
+            name: 'Cluster means'
+        },
+        ...ellipses
+    ];
+    
+    const layout = {
+        title: 'GMM Fit',
+        xaxis: { title: 'Feature 1', range: [-5, 5] },
+        yaxis: { title: 'Feature 2', range: [-5, 5] },
+        margin: { t: 40, r: 10, l: 40, b: 40 },
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: { color: '#e0e0e0' }
     };
     
     Plotly.react(element, data, layout, {responsive: true});
 }
 
-// Create Gaussian 2D plot
-function createGaussian2DPlot() {
-    const plotElement = document.getElementById('gaussian-2d-plot');
-    if (!plotElement) return;
+// Update the responsibilities plot
+function updateResponsibilitiesPlot(element, responsibilities) {
+    // Pick a subset of points to display their responsibilities
+    const numPoints = Math.min(20, responsibilities.length);
+    const sampleIndices = Array.from({length: numPoints}, (_, i) => 
+        Math.floor(i * responsibilities.length / numPoints));
     
-    // Initial parameters
-    let mu = [0, 0];
-    let sigma = [[1, 0.5], [0.5, 1]];
+    const data = [
+        {
+            x: Array.from({length: numPoints}, (_, i) => i),
+            y: sampleIndices.map(i => responsibilities[i][0]),
+            name: 'Cluster 1',
+            type: 'bar',
+            marker: { color: 'rgba(68, 1, 84, 0.7)' }
+        },
+        {
+            x: Array.from({length: numPoints}, (_, i) => i),
+            y: sampleIndices.map(i => responsibilities[i][1]),
+            name: 'Cluster 2',
+            type: 'bar',
+            marker: { color: 'rgba(59, 82, 139, 0.7)' }
+        },
+        {
+            x: Array.from({length: numPoints}, (_, i) => i),
+            y: sampleIndices.map(i => responsibilities[i][2]),
+            name: 'Cluster 3',
+            type: 'bar',
+            marker: { color: 'rgba(33, 145, 140, 0.7)' }
+        }
+    ];
     
-    // Create plot with initial values
-    updateGaussian2DPlot(plotElement, mu, sigma);
+    const layout = {
+        title: 'Cluster Responsibilities',
+        xaxis: { title: 'Sample Points' },
+        yaxis: { title: 'Responsibility', range: [0, 1] },
+        margin: { t: 40, r: 10, l: 40, b: 40 },
+        barmode: 'stack',
+        showlegend: true,
+        legend: { orientation: 'h', y: -0.2 },
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: { color: '#e0e0e0' }
+    };
     
-    // Create sliders div
-    const slidersDiv = document.createElement('div');
-    slidersDiv.className = 'sliders-container mt-3';
-    plotElement.parentNode.insertBefore(slidersDiv, plotElement.nextSibling);
+    Plotly.react(element, data, layout, {responsive: true});
+}
+
+// Update the convergence plot
+function updateConvergencePlot(element, logLikelihoodHistory) {
+    const data = [{
+        x: Array.from({length: logLikelihoodHistory.length}, (_, i) => i),
+        y: logLikelihoodHistory,
+        mode: 'lines+markers',
+        line: { color: '#bb86fc', width: 3 },
+        marker: { color: '#03dac6', size: 8 }
+    }];
     
-    // Create mean sliders
-    const muXSlider = createSlider(slidersDiv, 'Mean X', -2, 2, mu[0], 0.1, value => {
-        mu[0] = parseFloat(value);
-        updateGaussian2DPlot(plotElement, mu, sigma);
-    });
+    const layout = {
+        title: 'Log-Likelihood Convergence',
+        xaxis: { title: 'Iteration', tickvals: Array.from({length: logLikelihoodHistory.length}, (_, i) => i) },
+        yaxis: { title: 'Log-Likelihood' },
+        margin: { t: 40, r: 10, l: 40, b: 40 },
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: { color: '#e0e0e0' }
+    };
     
-    const muYSlider = createSlider(slidersDiv, 'Mean Y', -2, 2, mu[1], 0.1, value => {
-        mu[1] = parseFloat(value);
-        updateGaussian2DPlot(plotElement, mu, sigma);
-    });
+    Plotly.react(element, data, layout, {responsive: true});
+}
+
+// Update parameter display in the HTML
+function updateParameterDisplay(iteration, logLikelihood, weights, means) {
+    document.getElementById('current-iteration').textContent = iteration;
+    document.getElementById('current-likelihood').textContent = logLikelihood.toFixed(2);
     
-    // Create covariance sliders
-    const sigmaXXSlider = createSlider(slidersDiv, 'Var X', 0.1, 3, sigma[0][0], 0.1, value => {
-        sigma[0][0] = parseFloat(value);
-        updateGaussian2DPlot(plotElement, mu, sigma);
-    });
+    // Update mixture weights
+    const weightsHtml = weights.map((w, i) => 
+        `<p>π<sub>${i+1}</sub> = ${w.toFixed(3)}</p>`
+    ).join('');
+    document.getElementById('mixture-weights').innerHTML = weightsHtml;
     
-    const sigmaYYSlider = createSlider(slidersDiv, 'Var Y', 0.1, 3, sigma[1][1], 0.1, value => {
-        sigma[1][1] = parseFloat(value);
-        updateGaussian2DPlot(plotElement, mu, sigma);
-    });
+    // Update mean vectors
+    const meansHtml = means.map((m, i) => 
+        `<p>μ<sub>${i+1}</sub> = [${m[0].toFixed(2)}, ${m[1].toFixed(2)}]</p>`
+    ).join('');
+    document.getElementById('mean-vectors').innerHTML = meansHtml;
+}
+
+// E-step: Calculate responsibilities
+function calculateResponsibilities(x, y, weights, means, covs) {
+    const n = x.length;
+    const k = weights.length;
+    const responsibilities = Array(n).fill().map(() => Array(k).fill(0));
     
-    const sigmaXYSlider = createSlider(slidersDiv, 'Cov XY', -1, 1, sigma[0][1], 0.1, value => {
-        sigma[0][1] = parseFloat(value);
-        sigma[1][0] = parseFloat(value); // Keep symmetric
-        updateGaussian2DPlot(plotElement, mu, sigma);
-    });
+    for (let i = 0; i < n; i++) {
+        const point = [x[i], y[i]];
+        let sum = 0;
+        
+        // Calculate weighted probabilities
+        const weighted_probs = Array(k).fill(0);
+        for (let j = 0; j < k; j++) {
+            weighted_probs[j] = weights[j] * gaussianPDF(point, means[j], covs[j]);
+            sum += weighted_probs[j];
+        }
+        
+        // Normalize to get responsibilities
+        for (let j = 0; j < k; j++) {
+            responsibilities[i][j] = sum > 0 ? weighted_probs[j] / sum : 1/k;
+        }
+    }
+    
+    return responsibilities;
+}
+
+// M-step: Update parameters based on responsibilities
+function updateParameters(x, y, responsibilities, weights, means, covs) {
+    const n = x.length;
+    const k = weights.length;
+    
+    // Initialize component sums (effective number of points)
+    const Nk = Array(k).fill(0);
+    for (let j = 0; j < k; j++) {
+        for (let i = 0; i < n; i++) {
+            Nk[j] += responsibilities[i][j];
+        }
+    }
+    
+    // Update weights
+    for (let j = 0; j < k; j++) {
+        weights[j] = Nk[j] / n;
+    }
+    
+    // Update means
+    for (let j = 0; j < k; j++) {
+        const newMean = [0, 0];
+        for (let i = 0; i < n; i++) {
+            newMean[0] += responsibilities[i][j] * x[i];
+            newMean[1] += responsibilities[i][j] * y[i];
+        }
+        
+        if (Nk[j] > 0) {
+            means[j][0] = newMean[0] / Nk[j];
+            means[j][1] = newMean[1] / Nk[j];
+        }
+    }
+    
+    // Update covariances
+    for (let j = 0; j < k; j++) {
+        // Initialize covariance matrix to zeros
+        const newCov = [[0, 0], [0, 0]];
+        
+        for (let i = 0; i < n; i++) {
+            const dx = x[i] - means[j][0];
+            const dy = y[i] - means[j][1];
+            
+            newCov[0][0] += responsibilities[i][j] * dx * dx;
+            newCov[0][1] += responsibilities[i][j] * dx * dy;
+            newCov[1][0] += responsibilities[i][j] * dx * dy;
+            newCov[1][1] += responsibilities[i][j] * dy * dy;
+        }
+        
+        if (Nk[j] > 0) {
+            covs[j][0][0] = newCov[0][0] / Nk[j];
+            covs[j][0][1] = newCov[0][1] / Nk[j];
+            covs[j][1][0] = newCov[1][0] / Nk[j];
+            covs[j][1][1] = newCov[1][1] / Nk[j];
+            
+            // Add small regularization to avoid singularity
+            covs[j][0][0] += 1e-6;
+            covs[j][1][1] += 1e-6;
+        }
+    }
+}
+
+// Calculate log-likelihood
+function calculateLogLikelihood(x, y, weights, means, covs) {
+    const n = x.length;
+    let logLikelihood = 0;
+    
+    for (let i = 0; i < n; i++) {
+        const point = [x[i], y[i]];
+        let sum = 0;
+        
+        for (let j = 0; j < weights.length; j++) {
+            sum += weights[j] * gaussianPDF(point, means[j], covs[j]);
+        }
+        
+        logLikelihood += Math.log(Math.max(sum, 1e-10));
+    }
+    
+    return logLikelihood;
 }
 
 // Helper function to create a slider
@@ -297,69 +498,6 @@ function createSlider(container, label, min, max, value, step, onChange) {
     container.appendChild(sliderContainer);
     
     return sliderElement;
-}
-
-// Update Gaussian 2D plot with new parameters
-function updateGaussian2DPlot(element, mu, sigma) {
-    // Generate grid of points
-    const n = 50;
-    const x = numeric.linspace(-5, 5, n);
-    const y = numeric.linspace(-5, 5, n);
-    const z = [];
-    
-    const sigmaDet = sigma[0][0] * sigma[1][1] - sigma[0][1] * sigma[1][0];
-    const sigmaInv = [
-        [sigma[1][1] / sigmaDet, -sigma[0][1] / sigmaDet],
-        [-sigma[1][0] / sigmaDet, sigma[0][0] / sigmaDet]
-    ];
-    
-    // Calculate PDF values
-    for (let i = 0; i < n; i++) {
-        z[i] = [];
-        for (let j = 0; j < n; j++) {
-            const xDiff = [x[i] - mu[0], y[j] - mu[1]];
-            const exponent = -(
-                xDiff[0] * (sigmaInv[0][0] * xDiff[0] + sigmaInv[0][1] * xDiff[1]) +
-                xDiff[1] * (sigmaInv[1][0] * xDiff[0] + sigmaInv[1][1] * xDiff[1])
-            ) / 2;
-            const coef = 1 / (2 * Math.PI * Math.sqrt(sigmaDet));
-            z[i][j] = coef * Math.exp(exponent);
-        }
-    }
-    
-    // Create contour plot
-    const data = [
-        {
-            z: z,
-            x: x,
-            y: y,
-            type: 'contour',
-            colorscale: 'Plasma',
-            contours: {
-                coloring: 'heatmap',
-                showlabels: true,
-                labelfont: {
-                    size: 10,
-                    color: 'white',
-                }
-            }
-        }
-    ];
-    
-    const layout = {
-        title: '2D Gaussian Distribution',
-        xaxis: { title: 'x', range: [-5, 5] },
-        yaxis: { title: 'y', range: [-5, 5] },
-        margin: { t: 40, r: 20, l: 40, b: 40 },
-        showlegend: false,
-        paper_bgcolor: '#1e1e1e',
-        plot_bgcolor: '#1e1e1e',
-        font: {
-            color: '#e0e0e0'
-        }
-    };
-    
-    Plotly.react(element, data, layout, {responsive: true});
 }
 
 // Create comparison plots (K-Means vs GMM)

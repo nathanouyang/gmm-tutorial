@@ -198,60 +198,71 @@
             </div>
         </section>
         
-        <section id="dataset-preparation" class="my-5">
-            <h2>📊 Dataset Preparation</h2>
-            <p>Let's explore GMMs using both synthetic data and real-world examples.</p>
-            <div class="row">
+        <section id="interactive-gmm-example" class="my-5">
+            <h2>🧩 Interactive GMM Example</h2>
+            <p class="lead">Watch the EM algorithm in action with this interactive demonstration. See how GMM iteratively improves cluster assignments and parameters.</p>
+            
+            <div class="row mb-4">
                 <div class="col-md-6">
-                    <h3>Synthetic Dataset</h3>
-                    <p>We'll generate a dataset with overlapping clusters to demonstrate the power of GMM.</p>
-                    <div id="synthetic-data-plot" class="plot-container"></div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>Synthetic Data</h3>
+                            <p>Generate synthetic data to see how GMM fits to various cluster shapes and distributions.</p>
+                            <div id="interactive-data-plot" class="plot-container"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    <h3>Code Example: Generating Synthetic Data</h3>
-                    <pre class="code-block"><code class="python">
-import numpy as np
-from sklearn.datasets import make_blobs
-
-# Generate synthetic data with 3 clusters
-X, y_true = make_blobs(
-    n_samples=300, 
-    centers=3, 
-    cluster_std=[1.0, 2.0, 0.5], 
-    random_state=42
-)
-
-# Transform the data to make it more elliptical
-transformation = np.array([[0.6, -0.6], [0.4, 0.8]])
-X = np.dot(X, transformation)
-                    </code></pre>
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>EM Algorithm Steps</h3>
+                            <p>Watch the algorithm iterate through E-steps and M-steps:</p>
+                            <div id="interactive-em-plot" class="plot-container"></div>
+                            <div class="d-flex justify-content-center mt-3">
+                                <button id="em-iterate-btn" class="btn btn-primary mx-2">Next Iteration</button>
+                                <button id="em-reset-btn" class="btn btn-secondary mx-2">Reset</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
-        
-        <section id="gaussians-refresher" class="my-5">
-            <h2>📘 A Quick Refresher on Gaussians</h2>
+            
             <div class="row">
-                <div class="col-md-7">
-                    <h3>The Multivariate Gaussian Distribution</h3>
-                    <p>The multivariate Gaussian (or normal) distribution is a generalization of the one-dimensional normal distribution to higher dimensions. It is defined by:</p>
-                    <ul>
-                        <li><strong>Mean vector (μ)</strong>: The center of the distribution</li>
-                        <li><strong>Covariance matrix (Σ)</strong>: Describes the shape, size, and orientation of the distribution</li>
-                    </ul>
-                    <p>The probability density function (PDF) of a d-dimensional multivariate Gaussian is:</p>
-                    <div id="gaussian-pdf-formula" class="formula-display my-3"></div>
-                    <p>where:</p>
-                    <ul>
-                        <li>x is a d-dimensional vector</li>
-                        <li>μ is the mean vector</li>
-                        <li>Σ is the covariance matrix</li>
-                        <li>|Σ| is the determinant of Σ</li>
-                    </ul>
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>Iteration Details</h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>Current Parameter Values:</h4>
+                                    <div id="parameter-details" class="code-block p-3 bg-dark text-light">
+                                        <p><strong>Iteration:</strong> <span id="current-iteration">0</span></p>
+                                        <p><strong>Log-Likelihood:</strong> <span id="current-likelihood">-</span></p>
+                                        <hr>
+                                        <p><strong>Mixture Weights (π):</strong></p>
+                                        <div id="mixture-weights"></div>
+                                        <hr>
+                                        <p><strong>Mean Vectors (μ):</strong></p>
+                                        <div id="mean-vectors"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>Responsibilities:</h4>
+                                    <p>Each point has a probability of belonging to each cluster.</p>
+                                    <div id="interactive-responsibilities-plot" class="plot-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-5">
-                    <div id="gaussian-2d-plot" class="plot-container"></div>
-                    <p class="text-center">2D Gaussian distribution contour plot</p>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>Convergence</h3>
+                            <div id="interactive-convergence-plot" class="plot-container"></div>
+                            <p>The log-likelihood increases with each iteration until convergence.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
