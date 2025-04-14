@@ -1020,10 +1020,24 @@ function createEMProcessPlot() {
     // Prepare frames for animation
     const frames = iterations.map((iteration, i) => {
         // Create ellipses for the current iteration
-        const ellipses = createGMMEllipses({
-            means: iteration.means,
-            covariances: iteration.covs
-        });
+        const ellipsesData = [];
+        
+        // Add ellipses for each cluster
+        for (let k = 0; k < iteration.means.length; k++) {
+            const clusterColor = k === 0 ? 'rgba(186, 134, 252, 0.5)' : 
+                                k === 1 ? 'rgba(3, 218, 198, 0.5)' : 
+                                         'rgba(255, 186, 108, 0.5)';
+            
+            const cluster = {
+                mean: iteration.means[k],
+                cov: iteration.covs[k],
+                color: clusterColor
+            };
+            
+            // Generate ellipse
+            const ellipse = createClusterEllipse(cluster);
+            ellipsesData.push(ellipse);
+        }
         
         // Combine data points with ellipses for this iteration
         return {
@@ -1061,7 +1075,7 @@ function createEMProcessPlot() {
                     name: 'Cluster Means'
                 },
                 // Ellipses for each cluster
-                ...ellipses
+                ...ellipsesData
             ]
         };
     });
@@ -1152,6 +1166,47 @@ function createEMProcessPlot() {
                 data: frame.data
             })));
         });
+}
+
+// Helper function to create a single cluster ellipse
+function createClusterEllipse(cluster) {
+    // Calculate eigenvalues and eigenvectors for the covariance matrix
+    const { eigVals, eigVecs } = getEigenVectors(cluster.cov);
+    
+    // Scale eigenvectors for 95% confidence interval (2 standard deviations)
+    const scale = 2;
+    const scaledEigVals = eigVals.map(val => Math.sqrt(val) * scale);
+    
+    // Generate ellipse points
+    const t = numeric.linspace(0, 2 * Math.PI, 100);
+    const ellipseX = [];
+    const ellipseY = [];
+    
+    for (let j = 0; j < t.length; j++) {
+        const x = scaledEigVals[0] * Math.cos(t[j]);
+        const y = scaledEigVals[1] * Math.sin(t[j]);
+        
+        // Rotate according to eigenvectors
+        const rotX = eigVecs[0][0] * x + eigVecs[0][1] * y;
+        const rotY = eigVecs[1][0] * x + eigVecs[1][1] * y;
+        
+        // Translate to mean
+        ellipseX.push(rotX + cluster.mean[0]);
+        ellipseY.push(rotY + cluster.mean[1]);
+    }
+    
+    // Return the ellipse trace for plotting
+    return {
+        x: ellipseX,
+        y: ellipseY,
+        mode: 'lines',
+        type: 'scatter',
+        line: {
+            color: cluster.color,
+            width: 2
+        },
+        name: `Cluster Covariance`
+    };
 }
 
 // Create log-likelihood convergence plot
