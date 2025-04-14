@@ -1,5 +1,27 @@
 // GMM Tutorial JavaScript
+
+// Define numeric library for linear space functionality
+const numeric = {
+    linspace: function(start, end, n) {
+        const result = new Array(n);
+        const step = (end - start) / (n - 1);
+        for (let i = 0; i < n; i++) {
+            result[i] = start + i * step;
+        }
+        return result;
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if Plotly is available
+    if (typeof Plotly === 'undefined') {
+        console.error("Plotly library is not loaded! Plots will not be rendered.");
+        alert("Error: Required visualization library (Plotly) is not loaded. Please check your internet connection and refresh the page.");
+        return;
+    }
+    
+    console.log("Initializing GMM Tutorial...");
+    
     // Set Plotly config for dark theme
     const plotlyConfig = {
         responsive: true,
@@ -26,26 +48,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Render math formulas using KaTeX
     renderFormulas();
     
-    // Create interactive plots
-    createInteractiveGMMExample();
-    createComparisonPlots();
-    createGMMResultPlot();
-    createSoftClusteringPlot();
-    
-    // Create algorithm walkthrough plots
-    createEMProcessPlot();
-    createLikelihoodPlot();
-    
-    // Apply dark theme to all plots
-    document.querySelectorAll('.js-plotly-plot').forEach(plot => {
-        Plotly.relayout(plot, darkThemeLayout);
-    });
+    // Small delay to ensure all DOM elements are ready
+    setTimeout(function() {
+        // Create interactive plots
+        createInteractiveGMMExample();
+        createComparisonPlots();
+        createGMMResultPlot();
+        createSoftClusteringPlot();
+        
+        // Create algorithm walkthrough plots
+        createEMProcessPlot();
+        createLikelihoodPlot();
+        
+        // Apply dark theme to all plots
+        document.querySelectorAll('.js-plotly-plot').forEach(plot => {
+            try {
+                Plotly.relayout(plot, darkThemeLayout);
+            } catch (error) {
+                console.error("Error applying dark theme to plot:", error);
+            }
+        });
+        
+        console.log("GMM Tutorial initialization complete");
+    }, 500);
 });
 
 // Render mathematical formulas using KaTeX
 function renderFormulas() {
     // Get all formula display elements
     const formulaElements = document.querySelectorAll('.formula-display');
+    
+    // Set specific formulas content for elements that might be empty
+    const gmmIntroFormula = document.getElementById('gmm-intro-formula');
+    if (gmmIntroFormula) {
+        gmmIntroFormula.textContent = 'p(\\mathbf{x}) = \\sum_{k=1}^{K} \\pi_k \\mathcal{N}(\\mathbf{x}|\\boldsymbol{\\mu}_k, \\boldsymbol{\\Sigma}_k)';
+    }
     
     // Render each formula
     formulaElements.forEach(element => {
@@ -70,8 +107,18 @@ function createInteractiveGMMExample() {
     const responsibilitiesPlotElement = document.getElementById('interactive-responsibilities-plot');
     const convergencePlotElement = document.getElementById('interactive-convergence-plot');
     
+    console.log("Interactive GMM Example elements:", {
+        dataPlotElement,
+        emPlotElement,
+        responsibilitiesPlotElement,
+        convergencePlotElement
+    });
+    
     // Check if all elements exist
-    if (!dataPlotElement || !emPlotElement || !responsibilitiesPlotElement || !convergencePlotElement) return;
+    if (!dataPlotElement || !emPlotElement || !responsibilitiesPlotElement || !convergencePlotElement) {
+        console.error("Could not find all required elements for interactive GMM example");
+        return;
+    }
     
     // Parameters for the simulation
     let iteration = 0;
@@ -111,24 +158,35 @@ function createInteractiveGMMExample() {
     // Set up DOM element content
     updateParameterDisplay(iteration, logLikelihood, weights, means);
     
-    // Initial data plot
-    createDataPlot(dataPlotElement, allX, allY, trueLabels);
-    
-    // Initial EM plot
-    updateEMPlot(emPlotElement, allX, allY, responsibilities, means, covs);
-    
-    // Initial responsibilities plot
-    updateResponsibilitiesPlot(responsibilitiesPlotElement, responsibilities);
-    
-    // Initial convergence plot
-    updateConvergencePlot(convergencePlotElement, logLikelihoodHistory);
+    try {
+        // Initial data plot
+        console.log("Creating data plot");
+        createDataPlot(dataPlotElement, allX, allY, trueLabels);
+        
+        // Initial EM plot
+        console.log("Creating EM plot");
+        updateEMPlot(emPlotElement, allX, allY, responsibilities, means, covs);
+        
+        // Initial responsibilities plot
+        console.log("Creating responsibilities plot");
+        updateResponsibilitiesPlot(responsibilitiesPlotElement, responsibilities);
+        
+        // Initial convergence plot
+        console.log("Creating convergence plot");
+        updateConvergencePlot(convergencePlotElement, logLikelihoodHistory);
+    } catch (error) {
+        console.error("Error creating plots:", error);
+    }
     
     // Set up buttons
     const iterateButton = document.getElementById('em-iterate-btn');
     const resetButton = document.getElementById('em-reset-btn');
     
+    console.log("Buttons:", { iterateButton, resetButton });
+    
     if (iterateButton && resetButton) {
         iterateButton.addEventListener('click', () => {
+            console.log("Iterate button clicked");
             if (iteration < maxIterations) {
                 iteration++;
                 
@@ -156,6 +214,7 @@ function createInteractiveGMMExample() {
         });
         
         resetButton.addEventListener('click', () => {
+            console.log("Reset button clicked");
             // Reset all parameters
             iteration = 0;
             weights = [0.33, 0.33, 0.34];
@@ -190,6 +249,15 @@ function createInteractiveGMMExample() {
 
 // Create data plot for the interactive example
 function createDataPlot(element, x, y, labels) {
+    if (!element) {
+        console.error("Plot element is null");
+        return;
+    }
+    
+    // Ensure the element has minimum dimensions
+    element.style.minHeight = '300px';
+    element.style.width = '100%';
+    
     const data = [{
         x: x,
         y: y,
@@ -211,14 +279,34 @@ function createDataPlot(element, x, y, labels) {
         showlegend: false,
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#1e1e1e',
-        font: { color: '#e0e0e0' }
+        font: { color: '#e0e0e0' },
+        autosize: true
     };
     
-    Plotly.newPlot(element, data, layout, {responsive: true});
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+    
+    try {
+        Plotly.newPlot(element, data, layout, config);
+        console.log(`Plot created successfully in ${element.id}`);
+    } catch (error) {
+        console.error(`Error creating plot in ${element.id}:`, error);
+    }
 }
 
 // Update the EM plot
 function updateEMPlot(element, x, y, responsibilities, means, covs) {
+    if (!element) {
+        console.error("EM plot element is null");
+        return;
+    }
+    
+    // Ensure the element has minimum dimensions
+    element.style.minHeight = '300px';
+    element.style.width = '100%';
+    
     // Create cluster assignments based on highest responsibility
     const assignments = responsibilities.map(r => {
         return r.indexOf(Math.max(...r));
@@ -271,14 +359,34 @@ function updateEMPlot(element, x, y, responsibilities, means, covs) {
         showlegend: false,
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#1e1e1e',
-        font: { color: '#e0e0e0' }
+        font: { color: '#e0e0e0' },
+        autosize: true
     };
     
-    Plotly.react(element, data, layout, {responsive: true});
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+    
+    try {
+        Plotly.react(element, data, layout, config);
+        console.log(`EM plot updated successfully in ${element.id}`);
+    } catch (error) {
+        console.error(`Error updating EM plot in ${element.id}:`, error);
+    }
 }
 
 // Update the responsibilities plot
 function updateResponsibilitiesPlot(element, responsibilities) {
+    if (!element) {
+        console.error("Responsibilities plot element is null");
+        return;
+    }
+    
+    // Ensure the element has minimum dimensions
+    element.style.minHeight = '300px';
+    element.style.width = '100%';
+    
     // Pick a subset of points to display their responsibilities
     const numPoints = Math.min(20, responsibilities.length);
     const sampleIndices = Array.from({length: numPoints}, (_, i) => 
@@ -318,14 +426,34 @@ function updateResponsibilitiesPlot(element, responsibilities) {
         legend: { orientation: 'h', y: -0.2 },
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#1e1e1e',
-        font: { color: '#e0e0e0' }
+        font: { color: '#e0e0e0' },
+        autosize: true
     };
     
-    Plotly.react(element, data, layout, {responsive: true});
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+    
+    try {
+        Plotly.react(element, data, layout, config);
+        console.log(`Responsibilities plot updated successfully in ${element.id}`);
+    } catch (error) {
+        console.error(`Error updating responsibilities plot in ${element.id}:`, error);
+    }
 }
 
 // Update the convergence plot
 function updateConvergencePlot(element, logLikelihoodHistory) {
+    if (!element) {
+        console.error("Convergence plot element is null");
+        return;
+    }
+    
+    // Ensure the element has minimum dimensions
+    element.style.minHeight = '300px';
+    element.style.width = '100%';
+    
     const data = [{
         x: Array.from({length: logLikelihoodHistory.length}, (_, i) => i),
         y: logLikelihoodHistory,
@@ -342,28 +470,58 @@ function updateConvergencePlot(element, logLikelihoodHistory) {
         showlegend: false,
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#1e1e1e',
-        font: { color: '#e0e0e0' }
+        font: { color: '#e0e0e0' },
+        autosize: true
     };
     
-    Plotly.react(element, data, layout, {responsive: true});
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+    
+    try {
+        Plotly.react(element, data, layout, config);
+        console.log(`Convergence plot updated successfully in ${element.id}`);
+    } catch (error) {
+        console.error(`Error updating convergence plot in ${element.id}:`, error);
+    }
 }
 
 // Update parameter display in the HTML
 function updateParameterDisplay(iteration, logLikelihood, weights, means) {
-    document.getElementById('current-iteration').textContent = iteration;
-    document.getElementById('current-likelihood').textContent = logLikelihood.toFixed(2);
-    
-    // Update mixture weights
-    const weightsHtml = weights.map((w, i) => 
-        `<p>π<sub>${i+1}</sub> = ${w.toFixed(3)}</p>`
-    ).join('');
-    document.getElementById('mixture-weights').innerHTML = weightsHtml;
-    
-    // Update mean vectors
-    const meansHtml = means.map((m, i) => 
-        `<p>μ<sub>${i+1}</sub> = [${m[0].toFixed(2)}, ${m[1].toFixed(2)}]</p>`
-    ).join('');
-    document.getElementById('mean-vectors').innerHTML = meansHtml;
+    try {
+        const iterationElement = document.getElementById('current-iteration');
+        const likelihoodElement = document.getElementById('current-likelihood');
+        const weightsElement = document.getElementById('mixture-weights');
+        const meansElement = document.getElementById('mean-vectors');
+        
+        if (!iterationElement || !likelihoodElement || !weightsElement || !meansElement) {
+            console.error("One or more parameter display elements are missing", { 
+                iterationElement, likelihoodElement, weightsElement, meansElement 
+            });
+            return;
+        }
+        
+        // Update iteration and log-likelihood
+        iterationElement.textContent = iteration;
+        likelihoodElement.textContent = logLikelihood.toFixed(2);
+        
+        // Update mixture weights
+        const weightsHtml = weights.map((w, i) => 
+            `<p>π<sub>${i+1}</sub> = ${w.toFixed(3)}</p>`
+        ).join('');
+        weightsElement.innerHTML = weightsHtml;
+        
+        // Update mean vectors
+        const meansHtml = means.map((m, i) => 
+            `<p>μ<sub>${i+1}</sub> = [${m[0].toFixed(2)}, ${m[1].toFixed(2)}]</p>`
+        ).join('');
+        meansElement.innerHTML = meansHtml;
+        
+        console.log("Parameter display updated successfully");
+    } catch (error) {
+        console.error("Error updating parameter display:", error);
+    }
 }
 
 // E-step: Calculate responsibilities
@@ -993,18 +1151,6 @@ function gaussianPDF(x, mean, cov) {
     // Return PDF value
     return norm * Math.exp(-0.5 * mahalanobis);
 }
-
-// Define numeric library for linear space functionality
-const numeric = {
-    linspace: function(start, end, n) {
-        const result = new Array(n);
-        const step = (end - start) / (n - 1);
-        for (let i = 0; i < n; i++) {
-            result[i] = start + i * step;
-        }
-        return result;
-    }
-};
 
 // Create EM process visualization
 function createEMProcessPlot() {

@@ -61,6 +61,21 @@ a:hover {
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     background-color: var(--plot-bg);
+    position: relative;
+    display: block;
+}
+
+/* Fix for black boxes in plots */
+.js-plotly-plot, .plot-container .plotly {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 300px !important;
+}
+
+.js-plotly-plot .plotly, .plot-container .plotly, .plot-container.plotly {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 300px !important;
 }
 
 /* Mathematical formulas */
