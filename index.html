@@ -281,45 +281,9 @@ best_bic = n_components_range[np.argmin(bic)]
                 </div>
             </div>
         </section>
-        
-        <section id="summary" class="my-5">
-            <h2>📚 Summary</h2>
-            <div class="row">
-                <div class="col-md-8">
-                    <h3>Key Takeaways</h3>
-                    <ul>
-                        <li>GMM provides a flexible clustering method that can model complex, elliptical clusters</li>
-                        <li>Soft clustering assigns probabilities rather than hard labels, capturing uncertainty</li>
-                        <li>GMM is a generative model - we can sample new data from the fitted distribution</li>
-                        <li>Use AIC/BIC to choose the appropriate number of components</li>
-                        <li>The covariance_type parameter allows trading off between model flexibility and computational complexity</li>
-                    </ul>
-                    
-                    <h3>When to Use GMM</h3>
-                    <ul>
-                        <li>When clusters have different sizes or orientations</li>
-                        <li>When cluster boundaries are fuzzy and probabilistic assignments are valuable</li>
-                        <li>When a statistical model of the data generation process is desired</li>
-                        <li>For density estimation and generative modeling</li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Further Resources</h5>
-                            <ul>
-                                <li><a href="https://scikit-learn.org/stable/modules/mixture.html" target="_blank">Scikit-learn GMM Documentation</a></li>
-                                <li><a href="https://en.wikipedia.org/wiki/Mixture_model" target="_blank">Mixture Models on Wikipedia</a></li>
-                                <li><a href="https://www.jmlr.org/papers/volume6/zivkovic05a/zivkovic05a.pdf" target="_blank">Improved Algorithm for GMMs</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
     </div>
 
-    <footer class="bg-light py-3 mt-5">
+    <footer class="bg-dark text-light py-3 mt-5">
         <div class="container text-center">
             <p>© 2023 GMM Tutorial | Created for educational purposes</p>
         </div>
