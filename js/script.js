@@ -53,8 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create interactive plots
         createInteractiveGMMExample();
         createComparisonPlots();
-        createGMMResultPlot();
-        createSoftClusteringPlot();
         
         // Create algorithm walkthrough plots
         createEMProcessPlot();
@@ -1001,274 +999,6 @@ function updateComparisonPlots(kmeansElement, gmmElement, params) {
     Plotly.react(gmmElement, gmmData, gmmLayout, {responsive: true});
 }
 
-// Create GMM result plot
-function createGMMResultPlot() {
-    const plotElement = document.getElementById('gmm-result-plot');
-    if (!plotElement) return;
-    
-    // Generate synthetic data (simplified for visualization)
-    const cluster1 = generateGaussianCluster(80, [-3, -2], [[1.5, 0.5], [0.5, 1.0]]);
-    const cluster2 = generateGaussianCluster(120, [2, 2], [[1.0, -0.7], [-0.7, 2.0]]);
-    const cluster3 = generateGaussianCluster(60, [0, -3], [[0.5, 0], [0, 0.5]]);
-    
-    // Combine all data
-    const allX = cluster1.x.concat(cluster2.x, cluster3.x);
-    const allY = cluster1.y.concat(cluster2.y, cluster3.y);
-    
-    // Assign colors based on most likely component - we'd normally use the GMM's predict method
-    // For visualization, we'll use the original clusters
-    const allColors = Array(cluster1.x.length).fill(0)
-        .concat(Array(cluster2.x.length).fill(1))
-        .concat(Array(cluster3.x.length).fill(2));
-    
-    // Create GMM ellipses
-    const ellipses = createGMMEllipses([
-        { mean: [-3, -2], cov: [[1.5, 0.5], [0.5, 1.0]], color: 'rgba(86, 65, 255, 0.7)' },
-        { mean: [2, 2], cov: [[1.0, -0.7], [-0.7, 2.0]], color: 'rgba(65, 255, 86, 0.7)' },
-        { mean: [0, -3], cov: [[0.5, 0], [0, 0.5]], color: 'rgba(255, 166, 65, 0.7)' }
-    ]);
-    
-    // Create scatter plot with GMM ellipses
-    const data = [
-        // Scatter plot of data
-        {
-            x: allX,
-            y: allY,
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                color: allColors,
-                colorscale: 'Viridis',
-                size: 8,
-                opacity: 0.7
-            },
-            name: 'Data points'
-        },
-        ...ellipses
-    ];
-    
-    const layout = {
-        title: 'GMM Clustering Result',
-        xaxis: { title: 'Feature 1', range: [-6, 6] },
-        yaxis: { title: 'Feature 2', range: [-6, 6] },
-        margin: { t: 40, r: 10, l: 40, b: 40 },
-        showlegend: true
-    };
-    
-    Plotly.newPlot(plotElement, data, layout, {responsive: true});
-}
-
-// Create soft clustering visualization
-function createSoftClusteringPlot() {
-    const plotElement = document.getElementById('soft-clustering-plot');
-    if (!plotElement) return;
-    
-    // Generate synthetic data with overlapping clusters
-    const cluster1 = generateGaussianCluster(70, [-1, 0], [[1.0, 0], [0, 1.0]]);
-    const cluster2 = generateGaussianCluster(70, [1, 0], [[1.0, 0], [0, 1.0]]);
-    
-    // Combine all data
-    const allX = cluster1.x.concat(cluster2.x);
-    const allY = cluster1.y.concat(cluster2.y);
-    
-    // Calculate membership probabilities based on distance to centers
-    const probabilities = [];
-    for (let i = 0; i < allX.length; i++) {
-        const x = allX[i];
-        const y = allY[i];
-        
-        const d1 = Math.sqrt(Math.pow(x - (-1), 2) + Math.pow(y - 0, 2));
-        const d2 = Math.sqrt(Math.pow(x - 1, 2) + Math.pow(y - 0, 2));
-        
-        const p1 = Math.exp(-d1) / (Math.exp(-d1) + Math.exp(-d2));
-        probabilities.push(p1);
-    }
-    
-    // Create scatter plot with probability-based coloring
-    const data = [
-        {
-            x: allX,
-            y: allY,
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                color: probabilities,
-                colorscale: 'Portland',
-                size: 10,
-                colorbar: {
-                    title: 'Probability of Cluster 1',
-                    titleside: 'right'
-                }
-            }
-        }
-    ];
-    
-    const layout = {
-        title: 'Soft Clustering Probabilities',
-        xaxis: { title: 'Feature 1', range: [-3, 3] },
-        yaxis: { title: 'Feature 2', range: [-3, 3] },
-        margin: { t: 40, r: 20, l: 40, b: 40 },
-        showlegend: false
-    };
-    
-    Plotly.newPlot(plotElement, data, layout, {responsive: true});
-}
-
-// Helper function to create GMM ellipses for visualization
-function createGMMEllipses(clusters) {
-    const ellipses = [];
-    
-    clusters.forEach((cluster, i) => {
-        // Calculate eigenvalues and eigenvectors for the covariance matrix
-        const { eigVals, eigVecs } = getEigenVectors(cluster.cov);
-        
-        // Scale eigenvectors for 95% confidence interval (2 standard deviations)
-        const scale = 2;
-        const scaledEigVals = eigVals.map(val => Math.sqrt(val) * scale);
-        
-        // Generate ellipse points
-        const t = numeric.linspace(0, 2 * Math.PI, 100);
-        const ellipseX = [];
-        const ellipseY = [];
-        
-        for (let j = 0; j < t.length; j++) {
-            const x = scaledEigVals[0] * Math.cos(t[j]);
-            const y = scaledEigVals[1] * Math.sin(t[j]);
-            
-            // Rotate according to eigenvectors
-            const rotX = eigVecs[0][0] * x + eigVecs[0][1] * y;
-            const rotY = eigVecs[1][0] * x + eigVecs[1][1] * y;
-            
-            // Translate to mean
-            ellipseX.push(rotX + cluster.mean[0]);
-            ellipseY.push(rotY + cluster.mean[1]);
-        }
-        
-        // Add to plot data
-        ellipses.push({
-            x: ellipseX,
-            y: ellipseY,
-            mode: 'lines',
-            line: {
-                color: cluster.color,
-                width: 2
-            },
-            name: `Cluster ${i+1}`
-        });
-    });
-    
-    return ellipses;
-}
-
-// Helper function to generate random Gaussian cluster
-function generateGaussianCluster(n, mean, cov) {
-    // Naive implementation for visualization purposes
-    const x = [];
-    const y = [];
-    
-    // From eigendecomposition of covariance matrix
-    const { eigVals, eigVecs } = getEigenVectors(cov);
-    const scaledEigVals = eigVals.map(Math.sqrt);
-    
-    for (let i = 0; i < n; i++) {
-        // Generate standard normal variates
-        const u1 = Math.random();
-        const u2 = Math.random();
-        const z1 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-        const z2 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
-        
-        // Scale by eigenvalues
-        const pc1 = scaledEigVals[0] * z1;
-        const pc2 = scaledEigVals[1] * z2;
-        
-        // Rotate according to eigenvectors and add mean
-        const xi = eigVecs[0][0] * pc1 + eigVecs[0][1] * pc2 + mean[0];
-        const yi = eigVecs[1][0] * pc1 + eigVecs[1][1] * pc2 + mean[1];
-        
-        x.push(xi);
-        y.push(yi);
-    }
-    
-    return { x, y };
-}
-
-// Helper function to compute eigenvalues and eigenvectors of a 2x2 matrix
-function getEigenVectors(cov) {
-    const a = cov[0][0];
-    const b = cov[0][1];
-    const c = cov[1][0];
-    const d = cov[1][1];
-    
-    // Compute eigenvalues
-    const trace = a + d;
-    const det = a * d - b * c;
-    const discriminant = Math.sqrt(trace * trace - 4 * det);
-    
-    const lambda1 = (trace + discriminant) / 2;
-    const lambda2 = (trace - discriminant) / 2;
-    
-    // Compute eigenvectors
-    let v1x, v1y, v2x, v2y;
-    
-    if (b !== 0) {
-        v1x = lambda1 - d;
-        v1y = c;
-        v2x = lambda2 - d;
-        v2y = c;
-    } else if (c !== 0) {
-        v1x = b;
-        v1y = lambda1 - a;
-        v2x = b;
-        v2y = lambda2 - a;
-    } else {
-        // Diagonal matrix, eigenvectors are [1,0] and [0,1]
-        v1x = 1;
-        v1y = 0;
-        v2x = 0;
-        v2y = 1;
-    }
-    
-    // Normalize eigenvectors
-    const norm1 = Math.sqrt(v1x * v1x + v1y * v1y);
-    const norm2 = Math.sqrt(v2x * v2x + v2y * v2y);
-    
-    v1x /= norm1;
-    v1y /= norm1;
-    v2x /= norm2;
-    v2y /= norm2;
-    
-    return {
-        eigVals: [lambda1, lambda2],
-        eigVecs: [[v1x, v2x], [v1y, v2y]]
-    };
-}
-
-// Helper function for multivariate Gaussian PDF
-function gaussianPDF(x, mean, cov) {
-    const dim = mean.length;
-    const xMinusMu = [x[0] - mean[0], x[1] - mean[1]];
-    
-    // Calculate determinant
-    const det = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0];
-    
-    // Calculate inverse
-    const invCov = [
-        [cov[1][1] / det, -cov[0][1] / det],
-        [-cov[1][0] / det, cov[0][0] / det]
-    ];
-    
-    // Calculate Mahalanobis distance squared
-    const mahalanobis = 
-        xMinusMu[0] * (invCov[0][0] * xMinusMu[0] + invCov[0][1] * xMinusMu[1]) +
-        xMinusMu[1] * (invCov[1][0] * xMinusMu[0] + invCov[1][1] * xMinusMu[1]);
-    
-    // Calculate normalization constant
-    const norm = 1 / (2 * Math.PI * Math.sqrt(det));
-    
-    // Return PDF value
-    return norm * Math.exp(-0.5 * mahalanobis);
-}
-
 // Create EM process visualization
 function createEMProcessPlot() {
     const plotElement = document.getElementById('em-process-plot');
@@ -1576,4 +1306,159 @@ function createLikelihoodPlot() {
     };
     
     Plotly.newPlot(plotElement, [trace], layout, {responsive: true});
+}
+
+// Helper function to create GMM ellipses for visualization
+function createGMMEllipses(clusters) {
+    const ellipses = [];
+    
+    clusters.forEach((cluster, i) => {
+        // Calculate eigenvalues and eigenvectors for the covariance matrix
+        const { eigVals, eigVecs } = getEigenVectors(cluster.cov);
+        
+        // Scale eigenvectors for 95% confidence interval (2 standard deviations)
+        const scale = 2;
+        const scaledEigVals = eigVals.map(val => Math.sqrt(val) * scale);
+        
+        // Generate ellipse points
+        const t = numeric.linspace(0, 2 * Math.PI, 100);
+        const ellipseX = [];
+        const ellipseY = [];
+        
+        for (let j = 0; j < t.length; j++) {
+            const x = scaledEigVals[0] * Math.cos(t[j]);
+            const y = scaledEigVals[1] * Math.sin(t[j]);
+            
+            // Rotate according to eigenvectors
+            const rotX = eigVecs[0][0] * x + eigVecs[0][1] * y;
+            const rotY = eigVecs[1][0] * x + eigVecs[1][1] * y;
+            
+            // Translate to mean
+            ellipseX.push(rotX + cluster.mean[0]);
+            ellipseY.push(rotY + cluster.mean[1]);
+        }
+        
+        // Add to plot data
+        ellipses.push({
+            x: ellipseX,
+            y: ellipseY,
+            mode: 'lines',
+            line: {
+                color: cluster.color,
+                width: 2
+            },
+            name: `Cluster ${i+1}`
+        });
+    });
+    
+    return ellipses;
+}
+
+// Helper function to generate random Gaussian cluster
+function generateGaussianCluster(n, mean, cov) {
+    // Naive implementation for visualization purposes
+    const x = [];
+    const y = [];
+    
+    // From eigendecomposition of covariance matrix
+    const { eigVals, eigVecs } = getEigenVectors(cov);
+    const scaledEigVals = eigVals.map(Math.sqrt);
+    
+    for (let i = 0; i < n; i++) {
+        // Generate standard normal variates
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z1 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        const z2 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+        
+        // Scale by eigenvalues
+        const pc1 = scaledEigVals[0] * z1;
+        const pc2 = scaledEigVals[1] * z2;
+        
+        // Rotate according to eigenvectors and add mean
+        const xi = eigVecs[0][0] * pc1 + eigVecs[0][1] * pc2 + mean[0];
+        const yi = eigVecs[1][0] * pc1 + eigVecs[1][1] * pc2 + mean[1];
+        
+        x.push(xi);
+        y.push(yi);
+    }
+    
+    return { x, y };
+}
+
+// Helper function to compute eigenvalues and eigenvectors of a 2x2 matrix
+function getEigenVectors(cov) {
+    const a = cov[0][0];
+    const b = cov[0][1];
+    const c = cov[1][0];
+    const d = cov[1][1];
+    
+    // Compute eigenvalues
+    const trace = a + d;
+    const det = a * d - b * c;
+    const discriminant = Math.sqrt(trace * trace - 4 * det);
+    
+    const lambda1 = (trace + discriminant) / 2;
+    const lambda2 = (trace - discriminant) / 2;
+    
+    // Compute eigenvectors
+    let v1x, v1y, v2x, v2y;
+    
+    if (b !== 0) {
+        v1x = lambda1 - d;
+        v1y = c;
+        v2x = lambda2 - d;
+        v2y = c;
+    } else if (c !== 0) {
+        v1x = b;
+        v1y = lambda1 - a;
+        v2x = b;
+        v2y = lambda2 - a;
+    } else {
+        // Diagonal matrix, eigenvectors are [1,0] and [0,1]
+        v1x = 1;
+        v1y = 0;
+        v2x = 0;
+        v2y = 1;
+    }
+    
+    // Normalize eigenvectors
+    const norm1 = Math.sqrt(v1x * v1x + v1y * v1y);
+    const norm2 = Math.sqrt(v2x * v2x + v2y * v2y);
+    
+    v1x /= norm1;
+    v1y /= norm1;
+    v2x /= norm2;
+    v2y /= norm2;
+    
+    return {
+        eigVals: [lambda1, lambda2],
+        eigVecs: [[v1x, v2x], [v1y, v2y]]
+    };
+}
+
+// Helper function for multivariate Gaussian PDF
+function gaussianPDF(x, mean, cov) {
+    const dim = mean.length;
+    const xMinusMu = [x[0] - mean[0], x[1] - mean[1]];
+    
+    // Calculate determinant
+    const det = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0];
+    
+    // Calculate inverse
+    const invCov = [
+        [cov[1][1] / det, -cov[0][1] / det],
+        [-cov[1][0] / det, cov[0][0] / det]
+    ];
+    
+    // Calculate Mahalanobis distance squared
+    const mahalanobis = 
+        xMinusMu[0] * (invCov[0][0] * xMinusMu[0] + invCov[0][1] * xMinusMu[1]) +
+        xMinusMu[1] * (invCov[1][0] * xMinusMu[0] + invCov[1][1] * xMinusMu[1]);
+    
+    // Calculate normalization constant
+    const norm = 1 / (2 * Math.PI * Math.sqrt(det));
+    
+    // Return PDF value
+    return norm * Math.exp(-0.5 * mahalanobis);
 } 
