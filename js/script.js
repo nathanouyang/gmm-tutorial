@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
     createComparisonPlots();
     createGMMResultPlot();
     createSoftClusteringPlot();
-    createAicBicPlot();
     
     // Create algorithm walkthrough plots
     createEMProcessPlot();
@@ -697,84 +696,6 @@ function createSoftClusteringPlot() {
         yaxis: { title: 'Feature 2', range: [-3, 3] },
         margin: { t: 40, r: 20, l: 40, b: 40 },
         showlegend: false
-    };
-    
-    Plotly.newPlot(plotElement, data, layout, {responsive: true});
-}
-
-// Create AIC/BIC visualization
-function createAicBicPlot() {
-    const plotElement = document.getElementById('aic-bic-plot');
-    if (!plotElement) return;
-    
-    // Simulate AIC/BIC values for different numbers of components
-    const components = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    
-    // Simulate values with minimum at the correct number of components (3)
-    const aic = [
-        850, 700, 580, 590, 610, 625, 645, 670, 700
-    ];
-    
-    const bic = [
-        860, 720, 610, 630, 660, 685, 715, 750, 790
-    ];
-    
-    // Create line plot
-    const data = [
-        {
-            x: components,
-            y: aic,
-            mode: 'lines+markers',
-            type: 'scatter',
-            name: 'AIC',
-            line: {
-                color: 'blue',
-                width: 2
-            },
-            marker: {
-                size: 8
-            }
-        },
-        {
-            x: components,
-            y: bic,
-            mode: 'lines+markers',
-            type: 'scatter',
-            name: 'BIC',
-            line: {
-                color: 'red',
-                width: 2
-            },
-            marker: {
-                size: 8
-            }
-        },
-        // Add vertical line at optimal value
-        {
-            x: [3, 3],
-            y: [Math.min(...aic, ...bic) - 50, Math.max(...aic, ...bic) + 50],
-            mode: 'lines',
-            line: {
-                color: 'green',
-                width: 2,
-                dash: 'dash'
-            },
-            showlegend: false
-        }
-    ];
-    
-    const layout = {
-        title: 'AIC and BIC vs. Number of Components',
-        xaxis: { 
-            title: 'Number of Components',
-            tickvals: components
-        },
-        yaxis: { title: 'Information Criterion Value' },
-        margin: { t: 40, r: 20, l: 40, b: 40 },
-        legend: {
-            x: 0.7,
-            y: 0.9
-        }
     };
     
     Plotly.newPlot(plotElement, data, layout, {responsive: true});

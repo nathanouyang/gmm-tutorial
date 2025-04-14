@@ -384,40 +384,6 @@ for i, prob in enumerate(probabilities[point_idx]):
                 </div>
             </div>
         </section>
-        
-        <section id="hyperparameter-tuning" class="my-5">
-            <h2>🛠 Hyperparameter Tuning</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>Choosing the Number of Components</h3>
-                    <p>A critical parameter in GMM is the number of components. We can use information criteria to select this:</p>
-                    <ul>
-                        <li><strong>Akaike Information Criterion (AIC)</strong>: Penalizes model complexity</li>
-                        <li><strong>Bayesian Information Criterion (BIC)</strong>: Similar to AIC but with stronger penalty for complexity</li>
-                    </ul>
-                    <div id="aic-bic-formula" class="formula-display"></div>
-                </div>
-                <div class="col-md-6">
-                    <h3>Code Example: Model Selection</h3>
-                    <pre class="code-block"><code class="python">
-# Evaluate different numbers of components
-n_components_range = range(1, 10)
-models = [GaussianMixture(n_components=n, 
-                          covariance_type='full', 
-                          random_state=42).fit(X)
-          for n in n_components_range]
-
-aic = [model.aic(X) for model in models]
-bic = [model.bic(X) for model in models]
-
-# The best number of components is the one with lowest AIC/BIC
-best_aic = n_components_range[np.argmin(aic)]
-best_bic = n_components_range[np.argmin(bic)]
-                    </code></pre>
-                    <div id="aic-bic-plot" class="plot-container"></div>
-                </div>
-            </div>
-        </section>
     </div>
 
     <footer class="bg-dark text-light py-3 mt-5">
