@@ -1,8 +1,25 @@
+/* Dark Mode Theme */
+:root {
+    --bg-dark: #121212;
+    --bg-surface: #1e1e1e;
+    --bg-card: #252525;
+    --text-primary: #e0e0e0;
+    --text-secondary: #aaaaaa;
+    --accent-color: #bb86fc;
+    --accent-secondary: #03dac6;
+    --error-color: #cf6679;
+    --border-color: #333333;
+    --code-bg: #2d2d2d;
+    --plot-bg: #1e1e1e;
+    --slider-bg: #333333;
+}
+
 /* Main styling for GMM Tutorial */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
-    color: #333;
+    color: var(--text-primary);
+    background-color: var(--bg-dark);
 }
 
 /* Navbar styling */
@@ -11,12 +28,29 @@ body {
     font-size: 1.4rem;
 }
 
+.navbar-dark {
+    background-color: var(--bg-surface) !important;
+}
+
 /* Section styling */
 section {
     padding: 1.5rem;
     border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    background-color: var(--bg-surface);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+    margin-bottom: 2rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--accent-color);
+}
+
+a {
+    color: var(--accent-secondary);
+}
+
+a:hover {
+    color: var(--accent-color);
 }
 
 /* Plot containers */
@@ -25,7 +59,8 @@ section {
     width: 100%;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    background-color: var(--plot-bg);
 }
 
 /* Mathematical formulas */
@@ -33,16 +68,19 @@ section {
     padding: 1rem;
     margin: 1rem 0;
     overflow-x: auto;
+    background-color: var(--bg-card);
+    border-radius: 8px;
 }
 
 /* Code blocks */
 .code-block {
-    background-color: #f8f9fa;
+    background-color: var(--code-bg);
     border-radius: 5px;
     padding: 1rem;
-    border-left: 4px solid #6f42c1;
+    border-left: 4px solid var(--accent-color);
     margin: 1rem 0;
     overflow-x: auto;
+    color: var(--text-primary);
 }
 
 /* Section headers */
@@ -52,28 +90,52 @@ section h2 {
     margin-bottom: 20px;
 }
 
+/* Tables */
+.table {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+.table-bordered {
+    border-color: var(--border-color);
+}
+
+.table thead th {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+.table td {
+    border-color: var(--border-color);
+}
+
 /* Cards */
 .card {
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
 }
 
 .card:hover {
     transform: translateY(-3px);
 }
 
-/* Tables */
-.table {
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.03);
+.card-body {
+    color: var(--text-primary);
+}
+
+.card-title {
+    color: var(--accent-color);
 }
 
 /* Slider controls */
 .sliders-container {
-    background-color: #f8f9fa;
+    background-color: var(--bg-card);
     border-radius: 8px;
     padding: 15px;
     margin-top: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .slider-item {
@@ -83,7 +145,28 @@ section h2 {
 .slider-item label {
     margin-bottom: 5px;
     font-weight: 500;
-    color: #495057;
+    color: var(--text-primary);
+}
+
+input[type="range"] {
+    background-color: var(--slider-bg);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    background: var(--accent-color);
+}
+
+input[type="range"]::-moz-range-thumb {
+    background: var(--accent-color);
+}
+
+/* Lists */
+ul, ol {
+    color: var(--text-primary);
+}
+
+li {
+    margin-bottom: 0.5rem;
 }
 
 /* Responsive adjustments */

@@ -1,5 +1,28 @@
 // GMM Tutorial JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    // Set Plotly config for dark theme
+    const plotlyConfig = {
+        responsive: true,
+        displayModeBar: false
+    };
+    
+    // Common layout settings for dark theme
+    const darkThemeLayout = {
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: {
+            color: '#e0e0e0'
+        },
+        xaxis: {
+            gridcolor: '#333333',
+            zerolinecolor: '#555555'
+        },
+        yaxis: {
+            gridcolor: '#333333',
+            zerolinecolor: '#555555'
+        }
+    };
+    
     // Render math formulas using KaTeX
     renderFormulas();
     
@@ -10,6 +33,11 @@ document.addEventListener('DOMContentLoaded', function() {
     createGMMResultPlot();
     createSoftClusteringPlot();
     createAicBicPlot();
+    
+    // Apply dark theme to all plots
+    document.querySelectorAll('.js-plotly-plot').forEach(plot => {
+        Plotly.relayout(plot, darkThemeLayout);
+    });
 });
 
 // Render mathematical formulas using KaTeX
@@ -181,20 +209,25 @@ function updateSyntheticDataPlot(element, cluster1Params, cluster2Params, cluste
             type: 'scatter',
             marker: {
                 color: allColors,
-                colorscale: 'Viridis',
+                colorscale: 'Plasma',
                 size: 8,
-                opacity: 0.7
+                opacity: 0.8
             }
         }
     ];
     
     const layout = {
         title: 'Synthetic Data with 3 Clusters',
-        xaxis: { title: 'Feature 1', range: [-8, 8] },
-        yaxis: { title: 'Feature 2', range: [-8, 8] },
+        xaxis: { title: 'Feature 1', range: [-8, 8], gridcolor: '#333333', zerolinecolor: '#555555' },
+        yaxis: { title: 'Feature 2', range: [-8, 8], gridcolor: '#333333', zerolinecolor: '#555555' },
         margin: { t: 40, r: 20, l: 40, b: 40 },
         hovermode: 'closest',
-        showlegend: false
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: {
+            color: '#e0e0e0'
+        }
     };
     
     Plotly.react(element, data, layout, {responsive: true});
@@ -310,7 +343,7 @@ function updateGaussian2DPlot(element, mu, sigma) {
             x: x,
             y: y,
             type: 'contour',
-            colorscale: 'Viridis',
+            colorscale: 'Plasma',
             contours: {
                 coloring: 'heatmap',
                 showlabels: true,
@@ -327,7 +360,12 @@ function updateGaussian2DPlot(element, mu, sigma) {
         xaxis: { title: 'x', range: [-5, 5] },
         yaxis: { title: 'y', range: [-5, 5] },
         margin: { t: 40, r: 20, l: 40, b: 40 },
-        showlegend: false
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: {
+            color: '#e0e0e0'
+        }
     };
     
     Plotly.react(element, data, layout, {responsive: true});
@@ -453,9 +491,9 @@ function updateComparisonPlots(kmeansElement, gmmElement, params) {
             type: 'scatter',
             marker: {
                 color: kmeansLabels,
-                colorscale: 'Portland',
+                colorscale: 'Plasma',
                 size: 8,
-                opacity: 0.7
+                opacity: 0.8
             }
         },
         // Add vertical decision boundary
@@ -464,7 +502,7 @@ function updateComparisonPlots(kmeansElement, gmmElement, params) {
             y: [-5, 5],
             mode: 'lines',
             line: {
-                color: 'black',
+                color: '#e0e0e0',
                 width: 2,
                 dash: 'dash'
             }
@@ -473,10 +511,15 @@ function updateComparisonPlots(kmeansElement, gmmElement, params) {
     
     const kmeansLayout = {
         title: 'K-Means Clustering',
-        xaxis: { title: 'Feature 1', range: [-5, 5] },
-        yaxis: { title: 'Feature 2', range: [-5, 5] },
+        xaxis: { title: 'Feature 1', range: [-5, 5], gridcolor: '#333333', zerolinecolor: '#555555' },
+        yaxis: { title: 'Feature 2', range: [-5, 5], gridcolor: '#333333', zerolinecolor: '#555555' },
         margin: { t: 40, r: 10, l: 40, b: 40 },
-        showlegend: false
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: {
+            color: '#e0e0e0'
+        }
     };
     
     Plotly.react(kmeansElement, kmeansData, kmeansLayout, {responsive: true});
@@ -512,7 +555,7 @@ function updateComparisonPlots(kmeansElement, gmmElement, params) {
             x: xGrid,
             y: yGrid,
             type: 'contour',
-            colorscale: 'Portland',
+            colorscale: 'Plasma',
             showscale: false,
             contours: {
                 start: 0,
@@ -531,19 +574,24 @@ function updateComparisonPlots(kmeansElement, gmmElement, params) {
             type: 'scatter',
             marker: {
                 color: trueLabels,
-                colorscale: 'Portland',
+                colorscale: 'Plasma',
                 size: 8,
-                opacity: 0.7
+                opacity: 0.8
             }
         }
     ];
     
     const gmmLayout = {
         title: 'GMM Clustering',
-        xaxis: { title: 'Feature 1', range: [-5, 5] },
-        yaxis: { title: 'Feature 2', range: [-5, 5] },
+        xaxis: { title: 'Feature 1', range: [-5, 5], gridcolor: '#333333', zerolinecolor: '#555555' },
+        yaxis: { title: 'Feature 2', range: [-5, 5], gridcolor: '#333333', zerolinecolor: '#555555' },
         margin: { t: 40, r: 10, l: 40, b: 40 },
-        showlegend: false
+        showlegend: false,
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: {
+            color: '#e0e0e0'
+        }
     };
     
     Plotly.react(gmmElement, gmmData, gmmLayout, {responsive: true});
