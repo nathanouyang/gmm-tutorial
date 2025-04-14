@@ -75,6 +75,76 @@ function renderFormulas() {
             { displayMode: true }
         );
     }
+    
+    // Algorithm walkthrough formulas - targeted by ID
+    
+    // Model Definition Formula
+    const modelDefFormula = document.getElementById('model-definition-formula');
+    if (modelDefFormula) {
+        katex.render(
+            "p(\\mathbf{x}) = \\sum_{k=1}^{K} \\pi_k \\mathcal{N}(\\mathbf{x}|\\boldsymbol{\\mu}_k, \\boldsymbol{\\Sigma}_k)",
+            modelDefFormula,
+            { displayMode: true }
+        );
+    }
+    
+    // Complete Likelihood Formula
+    const completeLikelihoodFormula = document.getElementById('complete-likelihood-formula');
+    if (completeLikelihoodFormula) {
+        katex.render(
+            "\\ln p(\\mathbf{X}, \\mathbf{Z}|\\boldsymbol{\\pi}, \\boldsymbol{\\mu}, \\boldsymbol{\\Sigma}) = \\sum_{i=1}^{N} \\sum_{k=1}^{K} z_{ik} \\ln(\\pi_k \\mathcal{N}(\\mathbf{x}_i|\\boldsymbol{\\mu}_k, \\boldsymbol{\\Sigma}_k))",
+            completeLikelihoodFormula,
+            { displayMode: true }
+        );
+    }
+    
+    // E-Step Formula
+    const eStepFormula = document.getElementById('estep-formula');
+    if (eStepFormula) {
+        katex.render(
+            "\\gamma(z_{ik}) = \\frac{\\pi_k \\mathcal{N}(\\mathbf{x}_i|\\boldsymbol{\\mu}_k, \\boldsymbol{\\Sigma}_k)}{\\sum_{j=1}^{K} \\pi_j \\mathcal{N}(\\mathbf{x}_i|\\boldsymbol{\\mu}_j, \\boldsymbol{\\Sigma}_j)}",
+            eStepFormula,
+            { displayMode: true }
+        );
+    }
+    
+    // M-Step Formulas
+    const mStepMuFormula = document.getElementById('mstep-mu-formula');
+    if (mStepMuFormula) {
+        katex.render(
+            "\\boldsymbol{\\mu}_k^{new} = \\frac{\\sum_{i=1}^{N} \\gamma(z_{ik}) \\mathbf{x}_i}{\\sum_{i=1}^{N} \\gamma(z_{ik})}",
+            mStepMuFormula,
+            { displayMode: true }
+        );
+    }
+    
+    const mStepSigmaFormula = document.getElementById('mstep-sigma-formula');
+    if (mStepSigmaFormula) {
+        katex.render(
+            "\\boldsymbol{\\Sigma}_k^{new} = \\frac{\\sum_{i=1}^{N} \\gamma(z_{ik}) (\\mathbf{x}_i - \\boldsymbol{\\mu}_k^{new})(\\mathbf{x}_i - \\boldsymbol{\\mu}_k^{new})^T}{\\sum_{i=1}^{N} \\gamma(z_{ik})}",
+            mStepSigmaFormula,
+            { displayMode: true }
+        );
+    }
+    
+    const mStepPiFormula = document.getElementById('mstep-pi-formula');
+    if (mStepPiFormula) {
+        katex.render(
+            "\\pi_k^{new} = \\frac{\\sum_{i=1}^{N} \\gamma(z_{ik})}{N}",
+            mStepPiFormula,
+            { displayMode: true }
+        );
+    }
+    
+    // Log-likelihood Formula
+    const logLikelihoodFormula = document.getElementById('log-likelihood-formula');
+    if (logLikelihoodFormula) {
+        katex.render(
+            "\\ln p(\\mathbf{X}|\\boldsymbol{\\pi}, \\boldsymbol{\\mu}, \\boldsymbol{\\Sigma}) = \\sum_{i=1}^{N} \\ln \\left( \\sum_{k=1}^{K} \\pi_k \\mathcal{N}(\\mathbf{x}_i|\\boldsymbol{\\mu}_k, \\boldsymbol{\\Sigma}_k) \\right)",
+            logLikelihoodFormula,
+            { displayMode: true }
+        );
+    }
 }
 
 // Create synthetic data plot

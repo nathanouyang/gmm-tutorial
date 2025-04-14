@@ -79,7 +79,7 @@
                     
                     <div class="card mb-4">
                         <div class="card-body">
-                            <div class="formula-display">
+                            <div class="formula-display" id="model-definition-formula">
                                 p(\mathbf{x}) = \sum_{k=1}^{K} \pi_k \mathcal{N}(\mathbf{x}|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)
                             </div>
                         </div>
@@ -108,7 +108,7 @@
                     
                     <div class="card mb-4">
                         <div class="card-body">
-                            <div class="formula-display">
+                            <div class="formula-display" id="complete-likelihood-formula">
                                 \ln p(\mathbf{X}, \mathbf{Z}|\boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = \sum_{i=1}^{N} \sum_{k=1}^{K} z_{ik} \ln(\pi_k \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k))
                             </div>
                         </div>
@@ -147,7 +147,7 @@
                         <div class="card-body">
                             <h4>E-Step (Expectation)</h4>
                             <p>In the E-step, we estimate the expected values of the latent variables given our current model parameters. This results in computing "responsibilities" - the posterior probability that component k generated data point i:</p>
-                            <div class="formula-display">
+                            <div class="formula-display" id="estep-formula">
                                 \gamma(z_{ik}) = \frac{\pi_k \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)}{\sum_{j=1}^{K} \pi_j \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_j, \boldsymbol{\Sigma}_j)}
                             </div>
                             <p>These responsibilities replace the unknown binary indicators z<sub>ik</sub> with their expected values. Each data point now has a probability distribution over all K clusters instead of a single cluster assignment.</p>
@@ -159,13 +159,13 @@
                         <div class="card-body">
                             <h4>M-Step (Maximization)</h4>
                             <p>In the M-step, we update our model parameters to maximize the expected complete-data log-likelihood, using the responsibilities from the E-step:</p>
-                            <div class="formula-display">
+                            <div class="formula-display" id="mstep-mu-formula">
                                 \boldsymbol{\mu}_k^{new} = \frac{\sum_{i=1}^{N} \gamma(z_{ik}) \mathbf{x}_i}{\sum_{i=1}^{N} \gamma(z_{ik})}
                             </div>
-                            <div class="formula-display">
+                            <div class="formula-display" id="mstep-sigma-formula">
                                 \boldsymbol{\Sigma}_k^{new} = \frac{\sum_{i=1}^{N} \gamma(z_{ik}) (\mathbf{x}_i - \boldsymbol{\mu}_k^{new})(\mathbf{x}_i - \boldsymbol{\mu}_k^{new})^T}{\sum_{i=1}^{N} \gamma(z_{ik})}
                             </div>
-                            <div class="formula-display">
+                            <div class="formula-display" id="mstep-pi-formula">
                                 \pi_k^{new} = \frac{\sum_{i=1}^{N} \gamma(z_{ik})}{N}
                             </div>
                             <p>We can interpret N<sub>k</sub> = Σ<sub>i</sub> γ(z<sub>ik</sub>) as the effective number of points assigned to cluster k.</p>
@@ -185,7 +185,7 @@
                     </ul>
                     <p>The log-likelihood is guaranteed to increase (or remain the same) with each iteration, ensuring eventual convergence. However, it may converge to a local maximum rather than the global maximum.</p>
                     <p>The log-likelihood can be computed as:</p>
-                    <div class="formula-display">
+                    <div class="formula-display" id="log-likelihood-formula">
                         \ln p(\mathbf{X}|\boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = \sum_{i=1}^{N} \ln \left( \sum_{k=1}^{K} \pi_k \mathcal{N}(\mathbf{x}_i|\boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k) \right)
                     </div>
                     
