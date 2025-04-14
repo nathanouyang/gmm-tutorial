@@ -340,18 +340,20 @@ function createInteractiveGMMExample() {
     
     // Add new data button if it exists
     if (newDataButton) {
-        newDataButton.addEventListener('click', () => {
-            console.log("New data button clicked");
+        console.log("Setting up New Data button click event");
+        newDataButton.addEventListener('click', function() {
+            console.log("New data button clicked - event handler triggered");
             initializeData();
         });
     } else {
+        console.log("New Data button not found, creating it");
         // Create new data button if it doesn't exist
         const newDataButton = document.createElement('button');
         newDataButton.id = 'new-data-btn';
         newDataButton.className = 'btn btn-success mx-2';
         newDataButton.textContent = 'New Data';
-        newDataButton.addEventListener('click', () => {
-            console.log("New data button clicked");
+        newDataButton.addEventListener('click', function() {
+            console.log("New data button clicked - event handler triggered");
             initializeData();
         });
         
@@ -503,7 +505,7 @@ function updateResponsibilitiesPlot(element, responsibilities) {
     element.style.width = '100%';
     
     // Pick a subset of points to display their responsibilities
-    const numPoints = Math.min(20, responsibilities.length);
+    const numPoints = Math.min(10, responsibilities.length); // Reduced from 20 to 10 samples
     const sampleIndices = Array.from({length: numPoints}, (_, i) => 
         Math.floor(i * responsibilities.length / numPoints));
     
@@ -535,14 +537,20 @@ function updateResponsibilitiesPlot(element, responsibilities) {
         title: 'Cluster Responsibilities',
         xaxis: { title: 'Sample Points' },
         yaxis: { title: 'Responsibility', range: [0, 1] },
-        margin: { t: 40, r: 10, l: 40, b: 40 },
+        margin: { t: 30, r: 5, l: 40, b: 20 }, // Reduced margins
         barmode: 'stack',
         showlegend: true,
-        legend: { orientation: 'h', y: -0.2 },
+        legend: { 
+            orientation: 'h', 
+            y: 1.1,  // Move legend to top
+            xanchor: 'center',
+            x: 0.5
+        },
         paper_bgcolor: '#1e1e1e',
         plot_bgcolor: '#1e1e1e',
         font: { color: '#e0e0e0' },
-        autosize: true
+        autosize: true,
+        height: 280 // Fixed height to ensure it fits
     };
     
     const config = {
