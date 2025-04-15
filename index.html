@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="bg-dark text-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">GMM Tutorial</a>
@@ -236,13 +236,13 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <h4>Current Parameter Values:</h4>
-                                    <div id="parameter-details" class="code-block p-3 bg-dark text-light">
+                                    <div id="parameter-details" class="code-block p-3 bg-dark text-light border border-secondary">
                                         <p><strong>Iteration:</strong> <span id="current-iteration">0</span></p>
                                         <p><strong>Log-Likelihood:</strong> <span id="current-likelihood">-</span></p>
-                                        <hr>
+                                        <hr class="border-secondary">
                                         <p><strong>Mixture Weights (π):</strong></p>
                                         <div id="mixture-weights"></div>
-                                        <hr>
+                                        <hr class="border-secondary">
                                         <p><strong>Mean Vectors (μ):</strong></p>
                                         <div id="mean-vectors"></div>
                                     </div>
@@ -273,7 +273,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <h3>K-Means vs GMM Comparison</h3>
-                    <table class="table table-bordered">
+                    <table class="table table-dark table-bordered border-secondary">
                         <thead>
                             <tr>
                                 <th>Feature</th>

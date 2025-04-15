@@ -390,8 +390,18 @@ function createDataPlot(element, x, y, labels) {
     
     const layout = {
         title: 'Synthetic Data',
-        xaxis: { title: 'Feature 1', range: [-5, 5] },
-        yaxis: { title: 'Feature 2', range: [-5, 5] },
+        xaxis: { 
+            title: 'Feature 1', 
+            range: [-5, 5],
+            gridcolor: '#333333',
+            zerolinecolor: '#555555'
+        },
+        yaxis: { 
+            title: 'Feature 2', 
+            range: [-5, 5],
+            gridcolor: '#333333', 
+            zerolinecolor: '#555555'
+        },
         margin: { t: 40, r: 10, l: 40, b: 40 },
         showlegend: false,
         paper_bgcolor: '#1e1e1e',
